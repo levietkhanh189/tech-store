@@ -12,13 +12,18 @@ import apiConfig from '@constants/apiConfig';
 import useFetch from '@hooks/useFetch';
 import { formatMoney } from '@utils';
 import { IconMinus, IconPlus } from '@tabler/icons-react';
-import { Button, Space, message } from 'antd';
+import { Button, Form, Space, message } from 'antd';
+import axios from 'axios';
+import ListDetailsForm from './ListDetailsForm';
+import useDisclosure from '@hooks/useDisclosure';
 
 const ProductSinglePage = () => {
     const { id } = useParams();
     const dispatch = useDispatch();
     const queryParameters = new URLSearchParams(window.location.search);
     const [detail, setDetail] = useState([]);
+    const [openedDetailsModal, handlerDetailsModal] = useDisclosure(false);
+    const [form] = Form.useForm();
     const maxLines = 7;
     // const productId = queryParameters.get('productId');
     // const productId = useParams();
@@ -41,8 +46,6 @@ const ProductSinglePage = () => {
         else setDetail([]);
     }, [product]);
 
-    console.log(product);
-
     // getting single product
     // useEffect(() => {
     //     dispatch(fetchAsyncProductSingle(id));
@@ -54,7 +57,12 @@ const ProductSinglePage = () => {
     //     }
     // }, [cartMessageStatus]);
 
-    let discountedPrice = product?.price - product?.price * (product?.saleOff / 100);
+    let discountedPrice;
+    if (product?.saleOff) {
+        discountedPrice = product?.price - product?.price * (product?.saleOff / 100);
+    } else {
+        discountedPrice = 0;
+    }
     // if (productSingleStatus === STATUS.LOADING) {
     //     return <Loading />;
     // }
@@ -85,6 +93,15 @@ const ProductSinglePage = () => {
 
     return (
         <div className="con1 py-5 bg-whitesmoke" style={{ display: 'flex', justifyContent: 'center' }}>
+            <ListDetailsForm
+                open={openedDetailsModal}
+                onCancel={() => handlerDetailsModal.close()}
+                form={form}
+                itemCart={product?.listProductVariant}
+                quantity={quantity}
+                saleOff={product?.saleOff !==0 ? product?.saleOff : 0}
+                nameProduct={product?.name}
+            />
             <Space size={'large'} style={{ alignItems: 'center' }}>
                 <div className="product-single-l">
                     <div className="product-img">
@@ -165,36 +182,52 @@ const ProductSinglePage = () => {
                                 </span>
                             </div>
                         </div>
+                        {discountedPrice !== 0 ? (
+                            <div className="price">
+                                <div className="flex align-center">
+                                    <div className="old-price text-gray">
+                                        {formatMoney(product?.price, {
+                                            groupSeparator: ',',
+                                            decimalSeparator: '.',
+                                            currentcy: 'đ',
+                                            currentcyPosition: 'BACK',
+                                            currentDecimal: '0',
+                                        })}
+                                    </div>
+                                    <span className="fs-14 mx-2 text-dark">Bao gồm tất cả các loại thuế</span>
+                                </div>
 
-                        <div className="price">
-                            <div className="flex align-center">
-                                <div className="old-price text-gray">
-                                    {formatMoney(product?.price, {
-                                        groupSeparator: ',',
-                                        decimalSeparator: '.',
-                                        currentcy: 'đ',
-                                        currentcyPosition: 'BACK',
-                                        currentDecimal: '0',
-                                    })}
-                                </div>
-                                <span className="fs-14 mx-2 text-dark">Bao gồm tất cả các loại thuế</span>
-                            </div>
-
-                            <div className="flex align-center my-1">
-                                <div className="new-price fw-5 font-poppins fs-24 text-orange">
-                                    {formatMoney(discountedPrice, {
-                                        groupSeparator: ',',
-                                        decimalSeparator: '.',
-                                        currentcy: 'đ',
-                                        currentcyPosition: 'BACK',
-                                        currentDecimal: '0',
-                                    })}
-                                </div>
-                                <div className="discount bg-orange fs-13 text-white fw-6 font-poppins">
-                                    {product?.saleOff}% OFF
+                                <div className="flex align-center my-1">
+                                    <div className="new-price fw-5 font-poppins fs-24 text-orange">
+                                        {formatMoney(discountedPrice, {
+                                            groupSeparator: ',',
+                                            decimalSeparator: '.',
+                                            currentcy: 'đ',
+                                            currentcyPosition: 'BACK',
+                                            currentDecimal: '0',
+                                        })}
+                                    </div>
+                                    <div className="discount bg-orange fs-13 text-white fw-6 font-poppins">
+                                        {product?.saleOff}% OFF
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="price">
+                                <div className="flex align-center my-1">
+                                    <div className="new-price fw-5 font-poppins fs-24 text-orange">
+                                        {formatMoney(product?.price, {
+                                            groupSeparator: ',',
+                                            decimalSeparator: '.',
+                                            currentcy: 'đ',
+                                            currentcyPosition: 'BACK',
+                                            currentDecimal: '0',
+                                        })}
+                                    </div>
+                                    <span className="fs-14 mx-2 text-dark">Bao gồm tất cả các loại thuế</span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="qty flex align-center my-4">
                             <div className="qty-text">Quantity:</div>
@@ -227,7 +260,18 @@ const ProductSinglePage = () => {
                         </div>
 
                         <div className="btns">
-                            {product && <AddToCardButton item={product?.listProductVariant[0]?.id} quantity={quantity} />}
+                            {/* {product && <AddToCardButton onClick={() => AddToCardButton(product?.listProductVariant[0], quantity)} />} */}
+                            <button type="button" className="add-to-cart-btn btn">
+                                <i className="fas fa-shopping-cart"></i>
+                                <span
+                                    className="btn-text mx-2"
+                                    onClick={() => {
+                                        handlerDetailsModal.open();
+                                    }}
+                                >
+                                    add to cart
+                                </span>
+                            </button>
                             <button type="button" className="buy-now btn mx-3">
                                 <span className="btn-text">buy now</span>
                             </button>
@@ -239,42 +283,82 @@ const ProductSinglePage = () => {
     );
 };
 
-function AddToCardButton({ item, quantity }) {
-    const [loading, setLoading] = useState(false);
-    const {
-        data: addcard,
-        loading: addCardLoading,
-        execute: executeAddCard,
-    } = useFetch(apiConfig.cart.add, {
-        immediate: true,
-        params: { productVariantId:item, quantity:quantity },
-        mappingData: ({ data }) => data,
-    });
-const AddProducttoCard = () => {
-    setLoading(true);
-    executeAddCard().then((response) => {
-        if(response.result === true) {
-            message.success(`Sản phẩm được thêm vào giỏ hàng thành công`);
-            setLoading(false);
+function AddToCardButton({ itemCart, quantity }) {
+    console.log('Button');
+    const [cart, setCart] = useState([]);
+    const [total, setTotal] = useState(0);
+
+    useEffect(() => {
+        // Lấy giỏ hàng từ localStorage khi component được render
+        const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+        console.log(storedCart);
+        setCart(storedCart);
+        calculateTotal(storedCart);
+    }, []);
+
+    useEffect(() => {
+        // Lưu giỏ hàng vào localStorage khi giỏ hàng thay đổi
+        localStorage.setItem('cart', JSON.stringify(cart));
+        calculateTotal(cart);
+    }, [cart]);
+
+    const calculateTotal = (cartItems) => {
+        const newTotal = cartItems.reduce((acc, item) => acc + item.price, 0);
+        setTotal(newTotal);
+    };
+
+    const addToCart = (product) => {
+        const existingItem = cart.find((item) => item.id === product.id);
+
+        if (existingItem) {
+            // Nếu sản phẩm đã tồn tại trong giỏ hàng, tăng số lượng lên
+            const updatedCart = cart.map((item) =>
+                item.id === product.id ? { ...item, quantity: item?.quantity + product.quantity } : item,
+            );
+            setCart(updatedCart);
+        } else {
+            // Nếu sản phẩm chưa có trong giỏ hàng, thêm mới
+            setCart([...cart, { ...product }]);
         }
-        else {
-            message.error(`Thêm sản phẩm bị lỗi`);
-        }
-    });
-  };
-    return (
-        <button type="button" className="add-to-cart-btn btn">
-            <i className="fas fa-shopping-cart"></i>
-            <span
-                className="btn-text mx-2"
-                onClick={() => {
-                    AddProducttoCard();
-                }}
-            >
-                add to cart
-            </span>
-        </button>
-    );
+    };
+
+    const removeFromCart = (productId) => {
+        const updatedCart = cart.filter((item) => item.id !== productId);
+        setCart(updatedCart);
+    };
+    // console.log(cookies);
+    // const {
+    //     data: addcard,
+    //     loading: addCardLoading,
+    //     execute: executeAddCard,
+    // } = useFetch(apiConfig.cart.add, {
+    //     immediate: true,
+    //     params: { productVariantId:item, quantity:quantity },
+    //     mappingData: ({ data }) => data,
+    // });
+    const AddProducttoCard = () => {
+        // Lấy tất cả cookies
+        // Gọi API và thêm cookie vào headers
+        // executeAddCard({
+        //     headers: {
+        //         Cookie: allCookies,
+        //     },
+        // })
+    };
+
+    // return (
+    //     <button type="button" className="add-to-cart-btn btn">
+    //         <i className="fas fa-shopping-cart"></i>
+    //         <span
+    //             className="btn-text mx-2"
+    //             onClick={() => {
+    //                 addToCart(itemCart);
+    //             }}
+    //         >
+    //             add to cart
+    //         </span>
+    //     </button>
+    // );
 }
 
 export default ProductSinglePage;

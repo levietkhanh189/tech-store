@@ -1,5 +1,5 @@
-import React from 'react';
-import { Layout, Menu, Avatar, Space, Image, Input, ConfigProvider } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Menu, Avatar, Space, Image, Input, ConfigProvider, Badge, Form, Checkbox, Typography, Button, Drawer, InputNumber, Table, message } from 'antd';
 import {
     DownOutlined,
     UserOutlined,
@@ -25,6 +25,7 @@ import { defineMessages } from 'react-intl';
 import useTranslate from '@hooks/useTranslate';
 import logo from '@assets/images/logoTech.png';
 import routes from '@routes';
+import { formatMoney } from '@utils';
 const { Search } = Input;
 
 const messages = defineMessages({
@@ -46,10 +47,32 @@ const AppHeader = ({ collapsed, onCollapse }) => {
         // navigate(routes.ProductHomePage1.path);
     };
 
+    // const { execute, data } = useFetch({
+    //     ...apiConfig.cart.getList,
+    // });
+    const {
+        data,
+        // loading: getcompanyLoading,
+        execute: executesbrands,
+    } = useFetch(apiConfig.cart.getList, {
+        immediate: true,
+        // mappingData: ({ data }) =>
+        //     data.content.map((item) => ({
+        //         value: item.id,
+        //         label: item.name,
+        //     })),
+    });
+
+
+    const itemCart = data ? data : [];
+
     const itemHeader = () => {
         const items = [
             {
-                icon: <ShoppingCartOutlined style={{ fontSize: 22 }} />,
+                // icon: <ShoppingCartOutlined style={{ fontSize: 22 }} />,
+                icon: (
+                    <AppCart />
+                ),
                 key: 'cart',
             },
         ];
@@ -112,24 +135,15 @@ const AppHeader = ({ collapsed, onCollapse }) => {
     return (
         <Layout>
             <Header className={styles.appHeader} style={{ padding: 0, background: 'white', height: 90 }}>
-                {/* <span className={styles.iconCollapse} onClick={onCollapse}>
-                    {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                </span> */}
                 <a href="" title="Tech-Market" rel="home" style={{ marginLeft: 100, marginTop: 35 }}>
                     <img width="200" height="60" src={logo} alt="Tech-market" />
                 </a>
                 {/* <Input.Search
-                        placeholder="Bạn muốn tìm gì?"
-                        size="500"
-                        style={{ marginTop: 15, width: 400, alignItems: 'center', marginLeft: 150 }}
-                    /> */}
-                {/* <Search
-                    placeholder="input search text"
-                    allowClear
-                    enterButton="Search"
-                    size="large"
-                    style={{ marginTop: 15, width: 400, alignItems: 'center', marginLeft: 150 }}
+                    placeholder="Bạn muốn tìm gì?"
+                    size="500"
+                    style={{ fontSize:5, marginTop: 15, width: 400, alignItems: 'center', marginLeft: 150 }}
                 /> */}
+
                 <Menu mode="horizontal" className={styles.rightMenu} selectedKeys={[]} items={itemHeader()} />
             </Header>
             <ConfigProvider
@@ -187,5 +201,221 @@ const AppHeader = ({ collapsed, onCollapse }) => {
         </Layout>
     );
 };
+
+function AppCart() {
+    const [CartDrawer, setCartDrawer] = useState(false);
+    const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
+    const [cartItem, setCartItem] = useState([]);
+    const [cart, setCart] = useState([]);
+    const [total, setTotal] = useState(0);
+
+
+    // useEffect(() => {
+    //     getCart().then((res) => {
+    //         setCartItem(res.products);
+    //     });
+    // }, []);
+    useEffect(() => {
+        // Lấy giỏ hàng từ localStorage khi component được render
+        const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+        console.log(storedCart);
+        setCartItem(storedCart);
+        calculateTotal(storedCart);
+    }, []);
+    const calculateTotal = (cartItems) => {
+        const newTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+        setTotal(newTotal);
+    };
+    function onConfirmOrder(values) {
+        setCheckoutDrawerOpen(false);
+        message.success('Đặt hàng thành công');
+    }
+    return (
+        <div>
+            <Badge
+                onClick={() => {
+                    setCartDrawer(true);
+                }}
+                count={cartItem.length}
+                className="ShopingCartIcon"
+            >
+                <ShoppingCartOutlined style={{ fontSize: 20 }} />
+            </Badge>
+            <Drawer
+                open={CartDrawer}
+                onClose={() => {
+                    setCartDrawer(false);
+                }}
+                title="Giỏ hàng"
+                contentWrapperStyle={{ width: 600 }}
+            >
+                <Table
+                    pagination={false}
+                    columns={[
+                        {
+                            title: 'Tên sản phẩm',
+                            dataIndex: 'name',
+                            align: 'center',
+                        },
+                        {
+                            title: 'Màu sắc',
+                            dataIndex: 'color',
+                            align: 'center',
+                        },
+                        {
+                            title: 'Giá',
+                            dataIndex: 'price',
+                            name: 'price',
+                            align: 'center',
+                            render: (value) => {
+                                return (
+                                    <span>
+                                        {formatMoney(value, {
+                                            groupSeparator: ',',
+                                            decimalSeparator: '.',
+                                            currentcy: 'đ',
+                                            currentcyPosition: 'BACK',
+                                            currentDecimal: '0',
+                                        })}
+                                    </span>
+                                );
+                            },
+                        },
+                        {
+                            title: 'Số lượng',
+                            dataIndex: 'quantity',
+                            align: 'center',
+                            // render: (value, record) => {
+                            //     return (
+                            //         <InputNumber
+                            //             min={0}
+                            //             max={record.totalStock}
+                            //             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            //             // parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                            //             parser={handleParser}
+                            //             defaultValue={0}
+                            //             onChange={(value) => {
+                            //                 setnewArray((pre) =>
+                            //                     pre.map((cart) => {
+                            //                         if (record.id === cart.id) {
+                            //                             cart.total = cart.price * value;
+                            //                             cart.quantity = value;
+                            //                         }
+                            //                         return cart;
+                            //                     }),
+                            //                 );
+                            //                 setCheckArray(true);
+                            //                 console.log(record.totalStock);
+                            //             }}
+                            //         ></InputNumber>
+                            //     );
+                            // },
+                        },
+                        {
+                            title: 'Tổng',
+                            dataIndex: 'total',
+                            render: (value) => {
+                                return (
+                                    <>
+                                        {formatMoney(value, {
+                                            groupSeparator: ',',
+                                            decimalSeparator: '.',
+                                            currentcy: 'đ',
+                                            currentcyPosition: 'BACK',
+                                            currentDecimal: '0',
+                                        })}
+                                    </>
+                                );
+                            },
+                        },
+                    ]}
+                    dataSource={cartItem}
+                    summary={(data) => {
+                        const total = data.reduce((pre, current) => {
+                            return pre + current.total;
+                        }, 0);
+                        return (
+                            <span>
+                                Tổng trả:{' '}
+                                {formatMoney(total, {
+                                    groupSeparator: ',',
+                                    decimalSeparator: '.',
+                                    currentcy: 'đ',
+                                    currentcyPosition: 'BACK',
+                                    currentDecimal: '0',
+                                })}
+                            </span>
+                        );
+                    }}
+                ></Table>
+                <Button
+                    type="primary"
+                    onClick={() => {
+                        setCheckoutDrawerOpen(true);
+                        setCartDrawer(false);
+                    }}
+                >
+                    Thanh toán
+                </Button>
+            </Drawer>
+            <Drawer
+                open={checkoutDrawerOpen}
+                onClose={() => {
+                    setCheckoutDrawerOpen(false);
+                }}
+                contentWrapperStyle={{ width: 400 }}
+            >
+                <Form onFinish={onConfirmOrder}>
+                    <Form.Item
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please Enter your full name',
+                            },
+                        ]}
+                        label="Full Name"
+                        name="full_name"
+                    >
+                        <Input placeholder="Enter your full name ..." />
+                    </Form.Item>
+                    <Form.Item
+                        rules={[
+                            {
+                                required: true,
+                                type: 'email',
+                                message: 'Please Enter a valid email',
+                            },
+                        ]}
+                        label="Email"
+                        name="your_email"
+                    >
+                        <Input placeholder="Enter your email ..." />
+                    </Form.Item>
+                    <Form.Item
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Please Enter your address',
+                            },
+                        ]}
+                        label="Address"
+                        name="your_address"
+                    >
+                        <Input placeholder="Enter your address ..." />
+                    </Form.Item>
+                    <Form.Item>
+                        <Checkbox defaultChecked disabled>
+                            Cash on Delivery
+                        </Checkbox>
+                        <Typography.Paragraph type="secondary">More method coming soom</Typography.Paragraph>
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit">
+                        Confirm Order
+                    </Button>
+                </Form>
+            </Drawer>
+        </div>
+    );
+}
 
 export default AppHeader;
