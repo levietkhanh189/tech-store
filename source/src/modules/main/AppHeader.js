@@ -1,5 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Menu, Avatar, Space, Image, Input, ConfigProvider, Badge, Form, Checkbox, Typography, Button, Drawer, InputNumber, Table, message } from 'antd';
+import {
+    Layout,
+    Menu,
+    Avatar,
+    Space,
+    Image,
+    Input,
+    ConfigProvider,
+    Badge,
+    Form,
+    Checkbox,
+    Typography,
+    Button,
+    Drawer,
+    InputNumber,
+    Table,
+    message,
+    Tag,
+} from 'antd';
 import {
     DownOutlined,
     UserOutlined,
@@ -26,7 +44,13 @@ import useTranslate from '@hooks/useTranslate';
 import logo from '@assets/images/logoTech.png';
 import routes from '@routes';
 import { formatMoney } from '@utils';
+import AutoCompleteField from '@components/common/form/AutoCompleteField';
+import { commonMessage } from '@locales/intl';
+import SelectField from '@components/common/form/SelectField';
+import { paymentOptions } from '@constants/masterData';
+import { showErrorMessage } from '@services/notifyService';
 const { Search } = Input;
+const { Text } = Typography;
 
 const messages = defineMessages({
     profile: 'Profile',
@@ -36,6 +60,7 @@ const messages = defineMessages({
 
 const AppHeader = ({ collapsed, onCollapse }) => {
     const { profile } = useAuth();
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const translate = useTranslate();
@@ -50,29 +75,12 @@ const AppHeader = ({ collapsed, onCollapse }) => {
     // const { execute, data } = useFetch({
     //     ...apiConfig.cart.getList,
     // });
-    const {
-        data,
-        // loading: getcompanyLoading,
-        execute: executesbrands,
-    } = useFetch(apiConfig.cart.getList, {
-        immediate: true,
-        // mappingData: ({ data }) =>
-        //     data.content.map((item) => ({
-        //         value: item.id,
-        //         label: item.name,
-        //     })),
-    });
-
-
-    const itemCart = data ? data : [];
 
     const itemHeader = () => {
         const items = [
             {
                 // icon: <ShoppingCartOutlined style={{ fontSize: 22 }} />,
-                icon: (
-                    <AppCart />
-                ),
+                icon: <AppCart />,
                 key: 'cart',
             },
         ];
@@ -158,7 +166,7 @@ const AppHeader = ({ collapsed, onCollapse }) => {
                     },
                 }}
             >
-                <Header className={styles.appHeader2} style={{ paddingLeft: 100, borderBottom: '1px solid #f57e20' }}>
+                <Header className={styles.appHeader2} style={{ paddingLeft: 150, borderBottom: '1px solid #f57e20' }}>
                     <div className={styles.div_Category}>
                         <UnorderedListOutlined />
                         DANH MỤC SẢN PHẨM
@@ -203,32 +211,85 @@ const AppHeader = ({ collapsed, onCollapse }) => {
 };
 
 function AppCart() {
+    const { profile } = useAuth();
+    const navigate = useNavigate();
+    const translate = useTranslate();
+
     const [CartDrawer, setCartDrawer] = useState(false);
     const [checkoutDrawerOpen, setCheckoutDrawerOpen] = useState(false);
     const [cartItem, setCartItem] = useState([]);
-    const [cart, setCart] = useState([]);
     const [total, setTotal] = useState(0);
 
+    const {
+        data: cart,
+        execute: getCartExcute,
+        loading,
+    } = useFetch({
+        ...apiConfig.cart.getList,
+    });
 
-    // useEffect(() => {
-    //     getCart().then((res) => {
-    //         setCartItem(res.products);
-    //     });
-    // }, []);
+    const {
+        data: order,
+        execute: createOrderForGuest,
+    } = useFetch({
+        ...apiConfig.order.create,
+    });
     useEffect(() => {
-        // Lấy giỏ hàng từ localStorage khi component được render
-        const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
-        console.log(storedCart);
-        setCartItem(storedCart);
-        calculateTotal(storedCart);
+        if (!profile) {
+            const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+            console.log(storedCart);
+            setCartItem(storedCart);
+            calculateTotal(storedCart);
+        } else {
+            console.log(profile);
+            getCartExcute({
+                onCompleted: (response) => {
+                    // setCacheAccessToken(res.access_token);
+                    // executeGetProfile();
+                    setCartItem(response.data.cartDetailDtos);
+                },
+                onError: () => {
+                    // showErrorMessage(translate.formatMessage(message.loginFail));
+                    // form.resetFields();
+                    console.log('Lỗi');
+                },
+            });
+        }
     }, []);
+    console.log(cartItem);
+
     const calculateTotal = (cartItems) => {
         const newTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
         setTotal(newTotal);
     };
     function onConfirmOrder(values) {
-        setCheckoutDrawerOpen(false);
-        message.success('Đặt hàng thành công');
+        let array2 = new Array(cartItem.length).fill(null);
+
+        array2 = cartItem.map((item) => ({
+            color: item.color,
+            price: item.price,
+            productName: item.productName,
+            productVariantId: item.productVariantId,
+            quantity: item.quantity,
+        }));
+        const updatedValues = {
+            ...values,
+            listOrderProduct: array2, // Thay yourListOrderProductArray bằng mảng thực tế của bạn
+        };
+        createOrderForGuest({
+            data: { ...updatedValues },
+            onCompleted: (res) => {
+                // setCacheAccessToken(res.access_token);
+                // executeGetProfile();
+                setCheckoutDrawerOpen(false);
+                message.success('Đặt hàng thành công');
+            },
+            onError: () => {
+                showErrorMessage(translate.formatMessage(message.loginFail));
+            },
+        });
+        console.log(updatedValues);
+        // message.success('Đặt hàng thành công');
     }
     return (
         <div>
@@ -236,7 +297,7 @@ function AppCart() {
                 onClick={() => {
                     setCartDrawer(true);
                 }}
-                count={cartItem.length}
+                count={cartItem?.length}
                 className="ShopingCartIcon"
             >
                 <ShoppingCartOutlined style={{ fontSize: 20 }} />
@@ -247,115 +308,194 @@ function AppCart() {
                     setCartDrawer(false);
                 }}
                 title="Giỏ hàng"
-                contentWrapperStyle={{ width: 600 }}
+                contentWrapperStyle={{ width: 650 }}
             >
-                <Table
-                    pagination={false}
-                    columns={[
-                        {
-                            title: 'Tên sản phẩm',
-                            dataIndex: 'name',
-                            align: 'center',
-                        },
-                        {
-                            title: 'Màu sắc',
-                            dataIndex: 'color',
-                            align: 'center',
-                        },
-                        {
-                            title: 'Giá',
-                            dataIndex: 'price',
-                            name: 'price',
-                            align: 'center',
-                            render: (value) => {
-                                return (
-                                    <span>
-                                        {formatMoney(value, {
-                                            groupSeparator: ',',
-                                            decimalSeparator: '.',
-                                            currentcy: 'đ',
-                                            currentcyPosition: 'BACK',
-                                            currentDecimal: '0',
-                                        })}
-                                    </span>
-                                );
+                {profile ? (
+                    <Table
+                        pagination={false}
+                        columns={[
+                            {
+                                title: 'Tên sản phẩm',
+                                dataIndex: 'productName',
+                                align: 'center',
+                                width:200,
                             },
-                        },
-                        {
-                            title: 'Số lượng',
-                            dataIndex: 'quantity',
-                            align: 'center',
-                            // render: (value, record) => {
-                            //     return (
-                            //         <InputNumber
-                            //             min={0}
-                            //             max={record.totalStock}
-                            //             formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                            //             // parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                            //             parser={handleParser}
-                            //             defaultValue={0}
-                            //             onChange={(value) => {
-                            //                 setnewArray((pre) =>
-                            //                     pre.map((cart) => {
-                            //                         if (record.id === cart.id) {
-                            //                             cart.total = cart.price * value;
-                            //                             cart.quantity = value;
-                            //                         }
-                            //                         return cart;
-                            //                     }),
-                            //                 );
-                            //                 setCheckArray(true);
-                            //                 console.log(record.totalStock);
-                            //             }}
-                            //         ></InputNumber>
-                            //     );
-                            // },
-                        },
-                        {
-                            title: 'Tổng',
-                            dataIndex: 'total',
-                            render: (value) => {
-                                return (
-                                    <>
-                                        {formatMoney(value, {
-                                            groupSeparator: ',',
-                                            decimalSeparator: '.',
-                                            currentcy: 'đ',
-                                            currentcyPosition: 'BACK',
-                                            currentDecimal: '0',
-                                        })}
-                                    </>
-                                );
+                            {
+                                title: 'Màu sắc',
+                                dataIndex: [ 'color'],
+                                align: 'center',
                             },
-                        },
-                    ]}
-                    dataSource={cartItem}
-                    summary={(data) => {
-                        const total = data.reduce((pre, current) => {
-                            return pre + current.total;
-                        }, 0);
-                        return (
-                            <span>
-                                Tổng trả:{' '}
-                                {formatMoney(total, {
-                                    groupSeparator: ',',
-                                    decimalSeparator: '.',
-                                    currentcy: 'đ',
-                                    currentcyPosition: 'BACK',
-                                    currentDecimal: '0',
-                                })}
-                            </span>
-                        );
-                    }}
-                ></Table>
+                            {
+                                title: 'Giá',
+                                dataIndex: [ 'price'],
+                                name: 'price',
+                                align: 'center',
+                                width:150,
+                                render: (value) => {
+                                    return (
+                                        <span>
+                                            {formatMoney(value, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </span>
+                                    );
+                                },
+                            },
+                            {
+                                title: 'Số lượng',
+                                dataIndex: 'quantity',
+                                align: 'center',
+                            },
+                            {
+                                title: 'Tổng',
+                                dataIndex: 'totalPriceSell',
+                                width:150,
+                                align: 'center',
+                                render: (value) => {
+                                    return (
+                                        <>
+                                            {formatMoney(value, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </>
+                                    );
+                                },
+                            },
+                        ]}
+                        dataSource={cartItem}
+                        summary={(data) => {
+                            const total = data.reduce((pre, current) => {
+                                return pre + current.totalPriceSell;
+                            }, 0);
+                            return (
+                                <Table.Summary.Row>
+                                    <Table.Summary.Cell index={0} colSpan={4} align="end">
+                                        <Tag color={'green'} style={{ fontSize: 18, fontWeight: 700 }}>
+                                            Tổng trả
+                                        </Tag>
+                                    </Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1}>
+                                        <Text type="danger" style={{ fontWeight: 700 }}>
+                                            {formatMoney(total, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </Text>
+                                    </Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            );
+                        }}
+                    ></Table>
+                ) : (
+                    <Table
+                        pagination={false}
+                        columns={[
+                            {
+                                title: 'Tên sản phẩm',
+                                dataIndex: 'productName',
+                                align: 'center',
+                                width:200,
+                            },
+                            {
+                                title: 'Màu sắc',
+                                dataIndex: 'color',
+                                align: 'center',
+                            },
+                            {
+                                title: 'Giá',
+                                dataIndex: 'price',
+                                name: 'price',
+                                align: 'center',
+                                width:150,
+                                render: (value) => {
+                                    return (
+                                        <span>
+                                            {formatMoney(value, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </span>
+                                    );
+                                },
+                            },
+                            {
+                                title: 'Số lượng',
+                                dataIndex: 'quantity',
+                                align: 'center',
+                            },
+                            {
+                                title: 'Tổng',
+                                dataIndex: 'totalPriceSell',
+                                width:150,
+                                align: 'center',
+                                render: (value) => {
+                                    return (
+                                        <>
+                                            {formatMoney(value, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </>
+                                    );
+                                },
+                            },
+                        ]}
+                        dataSource={cartItem}
+                        summary={(data) => {
+                            const total = data.reduce((pre, current) => {
+                                return pre + current.totalPriceSell;
+                            }, 0);
+                            return (
+                                <Table.Summary.Row>
+                                    <Table.Summary.Cell index={0} colSpan={4} align="end">
+                                        <Tag color={'green'} style={{ fontSize: 18, fontWeight: 700 }}>
+                                            Tổng trả
+                                        </Tag>
+                                    </Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1}>
+                                        <Text type="danger" style={{ fontWeight: 700 }}>
+                                            {formatMoney(total, {
+                                                groupSeparator: ',',
+                                                decimalSeparator: '.',
+                                                currentcy: 'đ',
+                                                currentcyPosition: 'BACK',
+                                                currentDecimal: '0',
+                                            })}
+                                        </Text>
+                                    </Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            );
+                        }}
+                    ></Table>
+                )}
+
                 <Button
                     type="primary"
+                    style={{ marginTop:20 }}
                     onClick={() => {
-                        setCheckoutDrawerOpen(true);
+                        console.log(profile);
+                        profile ? navigate(routes.OderPage.path) : setCheckoutDrawerOpen(true);
                         setCartDrawer(false);
                     }}
                 >
-                    Thanh toán
+                    Đặt hàng
                 </Button>
             </Drawer>
             <Drawer
@@ -363,46 +503,111 @@ function AppCart() {
                 onClose={() => {
                     setCheckoutDrawerOpen(false);
                 }}
-                contentWrapperStyle={{ width: 400 }}
+                title="Đặt hàng"
+                contentWrapperStyle={{ width: 650 }}
             >
-                <Form onFinish={onConfirmOrder}>
+                <Form
+                    onFinish={onConfirmOrder}
+                    labelCol={{
+                        span: 7,
+                    }}
+                    wrapperCol={{
+                        span: 18,
+                    }}
+                    layout="horizontal"
+                    style={{
+                        maxWidth: 600,
+                    }}
+                >
                     <Form.Item
                         rules={[
                             {
                                 required: true,
-                                message: 'Please Enter your full name',
+                                message: 'Vui lòng điền tên',
                             },
                         ]}
-                        label="Full Name"
-                        name="full_name"
+                        label="Họ và tên"
+                        name="receiver"
+                        contentWrapperStyle={{ width: 200 }}
                     >
-                        <Input placeholder="Enter your full name ..." />
+                        <Input placeholder="Nhập tên ..." />
                     </Form.Item>
                     <Form.Item
                         rules={[
                             {
                                 required: true,
                                 type: 'email',
-                                message: 'Please Enter a valid email',
+                                message: 'Vui lòng điền email',
                             },
                         ]}
                         label="Email"
-                        name="your_email"
+                        name="email"
                     >
-                        <Input placeholder="Enter your email ..." />
+                        <Input placeholder="Nhập email ..." />
                     </Form.Item>
                     <Form.Item
                         rules={[
                             {
                                 required: true,
-                                message: 'Please Enter your address',
+                                message: 'Vui lòng điền địa chỉ',
                             },
                         ]}
-                        label="Address"
-                        name="your_address"
+                        label="Địa chỉ"
+                        name="address"
                     >
-                        <Input placeholder="Enter your address ..." />
+                        <Input placeholder="Nhập địa chỉ ..." />
                     </Form.Item>
+                    <Form.Item
+                        rules={[
+                            {
+                                required: true,
+                                message: 'Vui lòng điền số điện thoại',
+                            },
+                        ]}
+                        label="Số điện thoại"
+                        name="phone"
+                    >
+                        <Input placeholder="Nhập số điện thoại ..." />
+                    </Form.Item>
+
+                    <Form.Item label="Ghi chú" name="note">
+                        <Input placeholder="Nhập ghi chú ..." />
+                    </Form.Item>
+                    <Form.Item labelAlign="right" label="Mã giảm giá" name="voucherId">
+                        <Input placeholder="Nhập mã giảm giá ..." />
+                    </Form.Item>
+                    <AutoCompleteField
+                        label="Tỉnh"
+                        name="province"
+                        apiConfig={apiConfig.nation.autocomplete}
+                        mappingOptions={(item) => ({ value: item.name, label: item.name })}
+                        initialSearchParams={{ kind: 1 }}
+                        searchParams={(text) => ({ name: text, kind: 1 })}
+                    />
+                    <AutoCompleteField
+                        label="Quận"
+                        name="district"
+                        apiConfig={apiConfig.nation.autocomplete}
+                        mappingOptions={(item) => ({ value: item.name, label: item.name })}
+                        initialSearchParams={{ kind: 2 }}
+                        searchParams={(text) => ({ name: text, kind: 2 })}
+                    />
+                    <AutoCompleteField
+                        label="Huyện"
+                        name="ward"
+                        apiConfig={apiConfig.nation.autocomplete}
+                        mappingOptions={(item) => ({ value: item.name, label: item.name })}
+                        initialSearchParams={{ kind: 3 }}
+                        searchParams={(text) => ({ name: text, kind: 3 })}
+                    />
+
+                    <SelectField
+                        name="paymentMethod"
+                        label="Hình thức thanh toán"
+                        allowClear={false}
+                        options={paymentOptions}
+                        required
+                    />
                     <Form.Item>
                         <Checkbox defaultChecked disabled>
                             Cash on Delivery

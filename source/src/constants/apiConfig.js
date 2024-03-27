@@ -242,6 +242,11 @@ const apiConfig = {
         },
     },
     address: {
+        autocomplete: {
+            baseURL: `${apiUrl}v1/address/auto-complete`,
+            method: 'GET',
+            headers: baseHeader,
+        },
         getList: {
             baseURL: `${apiUrl}v1/address/list`,
             method: 'GET',
@@ -498,6 +503,12 @@ const apiConfig = {
             headers: baseHeader,
             isRequiredTenantId: true,
         },
+        createForUser: {
+            baseURL: `${apiUrl}v1/order/create-for-user`,
+            method: 'POST',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
         update: {
             baseURL: `${apiUrl}v1/order/update`,
             method: 'PUT',
@@ -531,25 +542,25 @@ const apiConfig = {
     },
     cart: {
         getList: {
-            baseURL: `${apiUrl}v1/`,
+            baseURL: `${apiUrl}v1/cart/get-my-cart`,
             method: 'GET',
             headers: baseHeader,
             isRequiredTenantId: true,
         },
         add: {
-            baseURL: `${apiUrl}v1/`,
+            baseURL: `${apiUrl}v1/cart/add-product-into-cart`,
             method: 'POST',
             headers: baseHeader,
             isRequiredTenantId: true,
         },
         update: {
-            baseURL: `${apiUrl}v1/`,
+            baseURL: `${apiUrl}v1/cart/update`,
             method: 'PUT',
             headers: baseHeader,
             isRequiredTenantId: true,
         },
         delete: {
-            baseURL: `${apiUrl}v1/`,
+            baseURL: `${apiUrl}v1/cart/delete/:id`,
             method: 'DELETE',
             headers: baseHeader,
             isRequiredTenantId: true,
