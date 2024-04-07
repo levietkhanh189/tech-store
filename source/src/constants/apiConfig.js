@@ -566,6 +566,43 @@ const apiConfig = {
             isRequiredTenantId: true,
         },
     },
+    transaction: {
+        cancelPay: {
+            baseURL: `${apiUrl}v1/transaction/deposit/cancel`,
+            method: 'GET',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
+
+        successPay: {
+            baseURL: `${apiUrl}v1/transaction/deposit/success`,
+            method: 'GET',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
+        create: {
+            baseURL: `${apiUrl}v1/transaction/create`,
+            method: 'POST',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
+    },
+    orderDetail: {
+        getByOrder: {
+            baseURL: `${apiUrl}v1/order-detail/get-by-order/:id`,
+            method: 'GET',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
+
+
+        getByPhoneAndOrder: {
+            baseURL: `${apiUrl}v1/order-detail/get-by-phone-orderCode`,
+            method: 'GET',
+            headers: baseHeader,
+            isRequiredTenantId: true,
+        },
+    },
 };
 
 export default apiConfig;

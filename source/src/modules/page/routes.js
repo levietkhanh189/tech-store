@@ -6,6 +6,10 @@ import ExperienceHome from './ExperienceHome';
 import HomePage from './HomePage/HomePage';
 import ProductSinglePage from './ProductSinglePage/ProductSinglePage';
 import OrderPage from './OrderPage/OrderPage';
+import ResultFail from './OrderPage/ResultFail';
+import ResultSucces from './OrderPage/ResultSucces';
+import HistoryOrderPage from './HistoryOrder/HistoryOrderPage';
+
 export default {
     ProductHomePage1: {
         path: '/all-product',
@@ -54,5 +58,23 @@ export default {
         component: OrderPage,
         auth: null,
         title: 'Đặt hàng',
+    },
+    ResultFail: {
+        path: '/my-order-fail',
+        component: ResultFail,
+        auth: null,
+        title: 'Đặt hàng thất bại',
+    },
+    ResultSuccess: {
+        path: '/my-order-success',
+        component: ResultSucces,
+        auth: null,
+        title: 'Đặt hàng thành công',
+    },
+    HistoryOrder: {
+        path: '/history-order',
+        component: HistoryOrderPage,
+        auth: null,
+        title: 'Đặt hàng thành công',
     },
 };

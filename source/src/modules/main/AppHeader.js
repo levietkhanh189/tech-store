@@ -48,7 +48,10 @@ import AutoCompleteField from '@components/common/form/AutoCompleteField';
 import { commonMessage } from '@locales/intl';
 import SelectField from '@components/common/form/SelectField';
 import { paymentOptions } from '@constants/masterData';
-import { showErrorMessage } from '@services/notifyService';
+import { showErrorMessage, showSucsessMessage } from '@services/notifyService';
+import IconOrder from '@assets/icons/icon';
+import { IconAlignBoxBottomLeft } from '@tabler/icons-react';
+import { IconAlignBoxBottomCenter } from '@tabler/icons-react';
 const { Search } = Input;
 const { Text } = Typography;
 
@@ -119,10 +122,20 @@ const AppHeader = ({ collapsed, onCollapse }) => {
                         onClick: () => navigate('/student'),
                     },
                     {
+                        key: 'histoy_order',
+                        label: (
+                            <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                <IconAlignBoxBottomCenter size={16}/>
+                                <span>Đơn hàng</span>
+                            </div>
+                        ),
+                        onClick: () => navigate(routes.HistoryOrder.path),
+                    },
+                    {
                         label: (
                             <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                                 <LoginOutlined />
-                                <span>{translate.formatMessage(messages.logout)}</span>
+                                <span>Đăng xuất</span>
                             </div>
                         ),
                         key: 'logout',
@@ -131,11 +144,18 @@ const AppHeader = ({ collapsed, onCollapse }) => {
                 ],
             });
         } else {
-            items.push({
-                key: 'Log_in',
-                label: <span>Đăng nhập/Đăng ký</span>,
-                onClick: () => navigate(routes.loginPage.path),
-            });
+            items.push(
+                {
+                    key: 'Log_in',
+                    label: <span>Đăng nhập/Đăng ký</span>,
+                    onClick: () => navigate(routes.loginPage.path),
+                },
+                {
+                    key: 'histoy_order',
+                    label: <span>Đơn hàng</span>,
+                    onClick: () => navigate(routes.HistoryOrder.path),
+                },
+            );
         }
         return items;
     };
@@ -228,10 +248,7 @@ function AppCart() {
         ...apiConfig.cart.getList,
     });
 
-    const {
-        data: order,
-        execute: createOrderForGuest,
-    } = useFetch({
+    const { data: order, execute: createOrderForGuest } = useFetch({
         ...apiConfig.order.create,
     });
     useEffect(() => {
@@ -278,14 +295,16 @@ function AppCart() {
         };
         createOrderForGuest({
             data: { ...updatedValues },
-            onCompleted: (res) => {
-                // setCacheAccessToken(res.access_token);
-                // executeGetProfile();
+            onCompleted: (respone) => {
+                localStorage.clear();
                 setCheckoutDrawerOpen(false);
-                message.success('Đặt hàng thành công');
+                showSucsessMessage('Đặt hàng thành công');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1800);
             },
             onError: () => {
-                showErrorMessage(translate.formatMessage(message.loginFail));
+                showErrorMessage('Đặt hàng thất bại');
             },
         });
         console.log(updatedValues);
@@ -318,19 +337,19 @@ function AppCart() {
                                 title: 'Tên sản phẩm',
                                 dataIndex: 'productName',
                                 align: 'center',
-                                width:200,
+                                width: 200,
                             },
                             {
                                 title: 'Màu sắc',
-                                dataIndex: [ 'color'],
+                                dataIndex: ['color'],
                                 align: 'center',
                             },
                             {
                                 title: 'Giá',
-                                dataIndex: [ 'price'],
+                                dataIndex: ['price'],
                                 name: 'price',
                                 align: 'center',
-                                width:150,
+                                width: 150,
                                 render: (value) => {
                                     return (
                                         <span>
@@ -353,7 +372,7 @@ function AppCart() {
                             {
                                 title: 'Tổng',
                                 dataIndex: 'totalPriceSell',
-                                width:150,
+                                width: 150,
                                 align: 'center',
                                 render: (value) => {
                                     return (
@@ -405,7 +424,7 @@ function AppCart() {
                                 title: 'Tên sản phẩm',
                                 dataIndex: 'productName',
                                 align: 'center',
-                                width:200,
+                                width: 200,
                             },
                             {
                                 title: 'Màu sắc',
@@ -417,7 +436,7 @@ function AppCart() {
                                 dataIndex: 'price',
                                 name: 'price',
                                 align: 'center',
-                                width:150,
+                                width: 150,
                                 render: (value) => {
                                     return (
                                         <span>
@@ -440,7 +459,7 @@ function AppCart() {
                             {
                                 title: 'Tổng',
                                 dataIndex: 'totalPriceSell',
-                                width:150,
+                                width: 150,
                                 align: 'center',
                                 render: (value) => {
                                     return (
@@ -488,7 +507,7 @@ function AppCart() {
 
                 <Button
                     type="primary"
-                    style={{ marginTop:20 }}
+                    style={{ marginTop: 20 }}
                     onClick={() => {
                         console.log(profile);
                         profile ? navigate(routes.OderPage.path) : setCheckoutDrawerOpen(true);
