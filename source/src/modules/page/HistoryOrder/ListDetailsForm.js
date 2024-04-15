@@ -39,7 +39,6 @@ const ListDetailsForm = ({ open, onCancel, detail, form, isEditing }) => {
     const { execute: executeCreate, loading } = useFetch({
         ...apiConfig.address.create,
     });
-    console.log(detail);
     const [tableData, setTableData] = useState([]);
 
     // Kiểm tra xem itemCart có tồn tại không trước khi sử dụng map
@@ -92,9 +91,10 @@ const ListDetailsForm = ({ open, onCancel, detail, form, isEditing }) => {
                                     avatar={
                                         <Avatar
                                             src={'https://cdn.tgdd.vn/Products/Images/42/292780/oppo-a77s-den-1.jpg'}
+                                            size={100}
                                         />
                                     }
-                                    title={<a href="https://ant.design">{item?.name}</a>}
+                                    title={<a href="https://ant.design"  style={{ fontSize:25 }}>{item?.name}</a>}
                                     // description={item?.price}
                                     description={
                                         <div
@@ -106,7 +106,7 @@ const ListDetailsForm = ({ open, onCancel, detail, form, isEditing }) => {
                                         >
                                             <div style={{ flex: '1', justifyContent: 'center' }}>Số lượng: {item.amount}</div>
                                             <div style={{ flex: '1', justifyContent: 'center' }}>Màu: {item.color}</div>
-                                            <div style={{ flex: '1', justifyContent: 'center' }}> Tổng tiền: { " " }
+                                            <div style={{ flex: '1', justifyContent: 'center', fontSize:20 }}> Tổng tiền: { " " }
                                                 {formatMoney(item?.price, {
                                                     groupSeparator: ',',
                                                     decimalSeparator: '.',
@@ -118,9 +118,9 @@ const ListDetailsForm = ({ open, onCancel, detail, form, isEditing }) => {
                                         </div>
                                     }
                                 />
-                                <div>
+                                {/* <div>
                                     <IconTrash color='#f32020'/>
-                                </div>
+                                </div> */}
                             </List.Item>
                         </Card>
                     )}

@@ -83,7 +83,7 @@ export const ADMIN_LOGIN_TYPE = 'password';
 export const CUSTOMER_LOGIN_TYPE = 'user';
 
 export const loginOptions = [
-    { label: 'ADMIN', value: ADMIN_LOGIN_TYPE  },
+    // { label: 'ADMIN', value: ADMIN_LOGIN_TYPE  },
     { label: 'KHÁCH HÀNG', value: CUSTOMER_LOGIN_TYPE },
     { label: 'QUẢN LÝ', value: MANAGER_LOGIN_TYPE },
 ];
@@ -94,6 +94,14 @@ export const STATUS_PENDING = 0;
 export const STATUS_ACTIVE = 1;
 export const STATUS_INACTIVE = -1;
 export const STATUS_DELETE = -2;
+
+export const STATE_PENDING = 1;
+export const STATE_CONFIRMED = 2;
+export const STATE_CANCELED = 3;
+export const STATE_COMPLETED = -4;
+
+export const STATE_NOPAID = false;
+export const STATE_PAIDED = true;
 
 export const DEFAULT_TABLE_ITEM_SIZE = 10;
 export const DEFAULT_TABLE_PAGE_START = 0;
@@ -159,5 +167,5 @@ export const CurrentcyPositions = {
 
 export const paymentSelect = [
     { label: 'Thanh toán tiền mặt', value: 0 },
-    { label: 'Thanh toán PaAYPAL', value: 1 },
+    { label: 'Thanh toán PAYPAL', value: 1 },
 ];

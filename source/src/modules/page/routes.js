@@ -9,6 +9,10 @@ import OrderPage from './OrderPage/OrderPage';
 import ResultFail from './OrderPage/ResultFail';
 import ResultSucces from './OrderPage/ResultSucces';
 import HistoryOrderPage from './HistoryOrder/HistoryOrderPage';
+import HistoryOrderGuest from './HistoryOrder/HistoryOrderGuest';
+import OrderAdminPage from '@modules/orderAdmin';
+import OrderAdminSavePage from '@modules/orderAdmin/OrderAdminSavePage';
+import DashboardPage from './Components/Dashbaord/DashBoardPage';
 
 export default {
     ProductHomePage1: {
@@ -76,5 +80,31 @@ export default {
         component: HistoryOrderPage,
         auth: null,
         title: 'Đặt hàng thành công',
+    },
+    HistoryOrderGuest: {
+        path: '/history-order-guest',
+        component: HistoryOrderGuest,
+        auth: null,
+        title: 'Đặt hàng thành công',
+    },
+    OrderPageAdmin: {
+        path: '/order-admin',
+        component: OrderAdminPage,
+        auth: true,
+        title: 'Quản lý đơn hàng',
+    },
+    OrderPageAdminSavePage: {
+        path: '/order-admin/:id',
+        component: OrderAdminSavePage,
+        auth: true,
+        title: 'Oder Admin Save Page',
+        permissions: [apiConfig.order.create.baseURL, apiConfig.order.update.baseURL],
+    },
+    DashboardPage: {
+        path: '/statistical',
+        component: DashboardPage,
+        auth: true,
+        title: 'Statistical Page',
+        // permissions: [apiConfig.order.create.baseURL, apiConfig.order.update.baseURL],
     },
 };
