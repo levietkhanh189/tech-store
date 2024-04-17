@@ -76,7 +76,6 @@ const OrderPage = () => {
     );
 
     const handleEdit = (item) => {
-        console.log(item);
         setItem1(item);
         handlerDetailsModal.open();
     };
@@ -122,6 +121,14 @@ const OrderPage = () => {
         ...apiConfig.transaction.create,
     });
 
+    const { execute: executeSuccessPay } = useFetch({
+        ...apiConfig.transaction.successPay,
+    });
+
+    const { execute: executeCancelPay } = useFetch({
+        ...apiConfig.transaction.cancelPay,
+    });
+
     function onConfirmOrder(values) {
         let array2 = new Array(cartItem.length).fill(null);
 
@@ -136,10 +143,10 @@ const OrderPage = () => {
             ...values,
             listOrderProduct: array2, // Thay yourListOrderProductArray bằng mảng thực tế của bạn
         };
+
         createOrderForUser({
             data: { ...updatedValues },
             onCompleted: (respone) => {
-                console.log(respone.data.orderId);
                 if (values.paymentMethod === 1) {
                     createTransaction({
                         data: {
@@ -148,26 +155,31 @@ const OrderPage = () => {
                             urlSuccess: 'http://localhost:3000/my-order-success',
                         },
                         onCompleted: (res) => {
-                            console.log(res.data);
                             window.location.href = res.data;
                             showSucsessMessage('Đơn hàng đang được xử lý!');
                         },
                         onError: () => {
-                            showErrorMessage(translate.formatMessage('Thanh toán thất bại!'));
+                            showErrorMessage("Thanh toán PAYPAL thất bại");
+                            setCurrent(2);
                             form.resetFields();
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
                         },
                     });
                 } else {
                     showSucsessMessage('Đặt hàng thành công');
                     setCurrent(2);
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 }
             },
             onError: (error) => {
                 showErrorMessage('Đặt hàng thất bại');
-                console.log(error);
             },
         });
-        console.log(updatedValues);
         // message.success('Đặt hàng thành công');
     }
     const [loadings, setLoadings] = useState([]);

@@ -93,13 +93,13 @@ const OrderAdminPage = () => {
                 const state = stateValues.find((item) => item.value == dataRow);
                 return (
                     <Tag color={state.color} style={{ minWidth:80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ padding: '0px', fontSize: 14 }}>{state.label}</div>
+                        <div style={{ padding: '3px 0px 3px 0px', fontSize: 14 }}>{state.label}</div>
                     </Tag>
                 );
             },
         },
         {
-            title: 'Tình trạng đơn hàng',
+            title: 'Trạng thái đơn hàng',
             dataIndex: 'state',
             align: 'center',
             width: 120,
@@ -139,6 +139,10 @@ const OrderAdminPage = () => {
         {
             key: 'orderCode',
             placeholder: "Mã đơn hàng",
+        },
+        {
+            key: 'userId',
+            placeholder: "Mã người dùng",
         },
         {
             key: 'state',

@@ -111,7 +111,7 @@ const ProductSinglePage = () => {
                         <div className="product-img">
                             <div className="product-img-zoom">
                                 <img
-                                    src={product ? (product.image ? product.image : '') : ''}
+                                    src={product ? (product?.image ? product?.image : '') : ''}
                                     alt=""
                                     className="img-cover"
                                 />
@@ -120,7 +120,7 @@ const ProductSinglePage = () => {
                             <div className="product-img-thumbs flex align-center my-2">
                                 <div className="thumb-item">
                                     <img
-                                        src={product ? (product.image ? product?.image : '') : ''}
+                                        src={product ? (product?.image ? product?.image : '') : ''}
                                         alt=""
                                         className="img-cover"
                                     />
@@ -130,7 +130,7 @@ const ProductSinglePage = () => {
                                         <img
                                             src={
                                                 product
-                                                    ? product.image
+                                                    ? product?.image
                                                         ? product?.listProductVariant[0]?.image
                                                         : ''
                                                     : ''
@@ -145,7 +145,7 @@ const ProductSinglePage = () => {
                                         <img
                                             src={
                                                 product
-                                                    ? product.image
+                                                    ? product?.image
                                                         ? product?.listProductVariant[1]?.image
                                                         : ''
                                                     : ''
@@ -160,7 +160,7 @@ const ProductSinglePage = () => {
                                         <img
                                             src={
                                                 product
-                                                    ? product.image
+                                                    ? product?.image
                                                         ? product?.listProductVariant[2]?.image
                                                         : ''
                                                     : ''
