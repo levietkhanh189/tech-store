@@ -5,7 +5,7 @@ import { UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import PageWrapper from '@components/common/layout/PageWrapper';
 import ListPage from '@components/common/layout/ListPage';
 import BaseTable from '@components/common/table/BaseTable';
-import { orderStateOption, paymentOptions, statusOptions } from '@constants/masterData';
+import { orderStateOption, paidValues, paymentOptions, statusOptions } from '@constants/masterData';
 import useTranslate from '@hooks/useTranslate';
 import { FieldTypes } from '@constants/formConfig';
 import apiConfig from '@constants/apiConfig';
@@ -13,6 +13,8 @@ import { defineMessages } from 'react-intl';
 import { Button, Tag } from 'antd';
 import { commonMessage } from '@locales/intl';
 import { convertUtcToLocalTime, formatMoney } from '@utils';
+import routes from '@routes';
+import { useNavigate } from 'react-router-dom';
 
 const message = defineMessages({
     objectName: 'Đơn hàng',
@@ -24,10 +26,11 @@ const message = defineMessages({
 
 const OrderAdminPage = () => {
     const translate = useTranslate();
+    const navigate = useNavigate();
     const statusValues = translate.formatKeys(statusOptions, ['label']);
     const stateValues = translate.formatKeys(paymentOptions, ['label']);
     const orderStatetateValues = translate.formatKeys(orderStateOption, ['label']);
-
+    const isPaidValues = translate.formatKeys(paidValues, ['label']);
 
     const { data, mixinFuncs, queryFilter, loading, pagination, changePagination } = useListBase({
         apiConfig: apiConfig.order,
@@ -92,7 +95,10 @@ const OrderAdminPage = () => {
             render(dataRow) {
                 const state = stateValues.find((item) => item.value == dataRow);
                 return (
-                    <Tag color={state.color} style={{ minWidth:80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Tag
+                        color={state.color}
+                        style={{ minWidth: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                         <div style={{ padding: '3px 0px 3px 0px', fontSize: 14 }}>{state.label}</div>
                     </Tag>
                 );
@@ -106,7 +112,39 @@ const OrderAdminPage = () => {
             render(dataRow) {
                 const state = orderStatetateValues.find((item) => item.value == dataRow);
                 return (
-                    <Tag color={state.color} style={{ minWidth:125, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Tag
+                        color={state.color}
+                        style={{
+                            minWidth: 80,
+                            height: 28,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <div style={{ padding: '0 0px', fontSize: 14 }}>{state.label}</div>
+                    </Tag>
+                );
+            },
+        },
+        {
+            title: 'Trạng thái thanh toán',
+            dataIndex: 'isPaid',
+            align: 'center',
+            width: 120,
+            render(dataRow) {
+                const state = isPaidValues.find((item) => item.value == dataRow);
+                return (
+                    <Tag
+                        color={state.color}
+                        style={{
+                            minWidth: 80,
+                            height: 28,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
                         <div style={{ padding: '0 0px', fontSize: 14 }}>{state.label}</div>
                     </Tag>
                 );
@@ -138,20 +176,27 @@ const OrderAdminPage = () => {
     const searchFields = [
         {
             key: 'orderCode',
-            placeholder: "Mã đơn hàng",
+            placeholder: 'Mã đơn hàng',
         },
         {
             key: 'userId',
-            placeholder: "Mã người dùng",
+            placeholder: 'Mã người dùng',
         },
         {
             key: 'state',
-            placeholder: "Tình trạng đơn hàng",
+            placeholder: 'Tình trạng đơn hàng',
             type: FieldTypes.SELECT,
             options: orderStatetateValues,
         },
     ];
     const breadRoutes = [{ breadcrumbName: translate.formatMessage(message.objectName) }];
+
+    const handleFetchDetail = (id) => {
+        navigate(
+            routes.DetailOrderAdmin.path +
+                `?orderId=${id}`,
+        );
+    };
 
     return (
         <PageWrapper routes={breadRoutes}>
@@ -160,6 +205,14 @@ const OrderAdminPage = () => {
                 actionBar={mixinFuncs.renderActionBar()}
                 baseTable={
                     <BaseTable
+                        onRow={(record, rowIndex) => ({
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                handleFetchDetail(record.id);
+
+                                // handlersModal.open();
+                            },
+                        })}
                         onChange={changePagination}
                         pagination={pagination}
                         loading={loading}

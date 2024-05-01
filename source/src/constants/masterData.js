@@ -11,10 +11,16 @@ import {
     STATE_CONFIRMED,
     STATE_COMPLETED,
     STATE_CANCELED,
+    STATE_PENDING_ADMIN,
+    STATE_CONFIRMED_ADMIN,
+    STATE_COMPLETED_ADMIN,
+    STATE_CANCELED_ADMIN,
     STATE_NOPAID,
     STATE_PAIDED,
     ACTIVE_USER,
     LOCKED_USER,
+    LOCKED_ACCOUNT,
+    ACTIVE_ACCOUNT,
 } from '@constants';
 import { defineMessages } from 'react-intl';
 import { nationKindMessage } from './intl';
@@ -35,11 +41,23 @@ const userStateMessage = defineMessages({
     ACTIVE_USER: 'Kích hoạt',
 });
 
+const accountStatusMessage = defineMessages({
+    LOCKED_ACCOUNT: 'Khóa',
+    ACTIVE_ACCOUNT: 'Đang hoạt động',
+});
+
 const orderStateMessage = defineMessages({
     STATE_PENDING: 'Đang xử lý',
-    STATE_CONFIRMED: 'Đang vận chuyển',
+    STATE_CONFIRMED: 'Đã được duyệt',
     STATE_COMPLETED: 'Đã hoàn thành',
     STATE_CANCELED: 'Đã hủy',
+
+});
+const orderStateAdMessage = defineMessages({
+    STATE_PENDING_ADMIN: 'Đang xử lý',
+    STATE_CONFIRMED_ADMIN: 'Duyệt',
+    STATE_COMPLETED_ADMIN: 'Hoàn thành',
+    STATE_CANCELED_ADMIN: 'Hủy',
 
 });
 
@@ -73,6 +91,13 @@ export const orderStateOption = [
     { value: STATE_CANCELED, label: orderStateMessage.STATE_CANCELED, color: '#f52828' },
 ];
 
+export const orderStateValue = [
+    { value: STATE_PENDING_ADMIN, label: orderStateAdMessage.STATE_PENDING_ADMIN, color: '#d4d61d' },
+    { value: STATE_CONFIRMED_ADMIN, label: orderStateAdMessage.STATE_CONFIRMED_ADMIN, color: '#46c956' },
+    { value: STATE_COMPLETED_ADMIN, label: orderStateAdMessage.STATE_COMPLETED_ADMIN, color: '#9af099' },
+    { value: STATE_CANCELED_ADMIN, label: orderStateAdMessage.STATE_CANCELED_ADMIN, color: '#f52828' },
+];
+
 export const paidOptions = [
     { value: STATE_NOPAID, label: isPaidMessage.STATE_NOPAID },
     { value: STATE_PAIDED, label: isPaidMessage.STATE_PAIDEDD },
@@ -91,7 +116,7 @@ export const statusOptions = [
 
 export const paymentOptions = [
     { value: COD_METHOD, label: paymentMessage.COD_METHOD, color: '#00A648' },
-    { value: PAYPAL_METHOD, label: paymentMessage.PAYPAL_METHOD, color: '#FFBF00' },
+    { value: PAYPAL_METHOD, label: paymentMessage.PAYPAL_METHOD, color: '#00adf9' },
 ];
 
 export const userSateteOptions = [
@@ -99,9 +124,14 @@ export const userSateteOptions = [
     { value: ACTIVE_USER, label: userStateMessage.ACTIVE_USER, color: 'green' },
 ];
 
+export const accountStatusOptions = [
+    { value: LOCKED_ACCOUNT, label: userStateMessage.LOCKED_USER, color: 'red' },
+    { value: ACTIVE_ACCOUNT, label: userStateMessage.ACTIVE_USER, color: 'green' },
+];
+
 export const userStatusOptions = [
-    { value: LOCKED_USER, label: userStateMessage.LOCKED_USER },
-    { value: ACTIVE_USER, label: userStateMessage.ACTIVE_USER },
+    { value: LOCKED_USER, label: accountStatusMessage.LOCKED_ACCOUNT },
+    { value: ACTIVE_USER, label: accountStatusMessage.ACTIVE_ACCOUNT },
 ];
 
 export const formSize = {

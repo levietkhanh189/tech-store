@@ -15,7 +15,10 @@ import BrandRoutes from '@modules/brand/routes';
 import ProductRoutes from '@modules/product/routes';
 import SignupPage from '@modules/signup';
 import ProfileForm from '@modules/profileUser/ProfileForm';
-import ProfileUserPage from '@modules/profileUser';
+import ProfileUserPage from '@modules/profileUser/ProfileUserSavePage';
+import PersonInfo from '@modules/profileUser/PersonInfo';
+import OrderAdmin from '@modules/orderAdmin/routes';
+import ProfileUser from '@modules/profileUser/routes';
 
 /*
 	auth
@@ -60,12 +63,6 @@ const routes = {
         auth: true,
         title: 'Profile page',
     },
-    profilePageUser: {
-        path: '/profile-user',
-        component: ProfileUserPage,
-        auth: null,
-        title: 'Profile User page',
-    },
     groupPermissionPage: {
         path: '/group-permission',
         component: GroupPermissionListPage,
@@ -96,6 +93,8 @@ const routes = {
     ...ProductHomePageRoutes,
     ...BrandRoutes,
     ...ProductRoutes,
+    ...OrderAdmin,
+    ...ProfileUser,
 
 
     // keep this at last

@@ -89,12 +89,22 @@ const AddressForm = (props) => {
     useEffect(() => {
         form.setFieldsValue({
             ...dataDetail,
+            provinceId: dataDetail?.provinceInfo?.id,
+            districtId: dataDetail?.districtInfo?.id,
+            wardId: dataDetail?.wardInfo?.id,
         });
         setImageUrl(dataDetail.avatar);
     }, [dataDetail]);
     return (
-        <BaseForm id={formId} onFinish={handleSubmit} form={form} onValuesChange={onValuesChange}>
-            <Card className="card-form" bordered={false}>
+        <Card className="card-form" bordered={false}>
+            <BaseForm
+                id={formId}
+                onFinish={handleSubmit}
+                form={form}
+                onValuesChange={onValuesChange}
+                style={{ width: '90%' }}
+                labelCol={{ span: 9 }}
+            >
                 <Row gutter={16}>
                     <Col span={12}>
                         <TextField label={translate.formatMessage(commonMessage.Name)} name="name" />
@@ -144,8 +154,8 @@ const AddressForm = (props) => {
                     </Col>
                 </Row>
                 <div className="footer-card-form">{actions}</div>
-            </Card>
-        </BaseForm>
+            </BaseForm>
+        </Card>
     );
 };
 

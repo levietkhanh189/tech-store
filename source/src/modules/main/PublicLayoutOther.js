@@ -22,7 +22,7 @@ const PublicLayoutOther = ({ children }) => {
     return (
         <Layout>
             <AppHeader collapsed={collapsed} onCollapse={toggleCollapsed} />
-            <Layout>
+            <Layout >
                 <Content>
                     <div className={styles.wrapper}>{children}</div>
                 </Content>
