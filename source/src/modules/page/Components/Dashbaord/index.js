@@ -1,25 +1,20 @@
-import React from 'react';
 import {
     DollarCircleOutlined,
-    ShoppingCartOutlined,
-    ShoppingOutlined,
-    UserOutlined,
-    UngroupOutlined,
     RiseOutlined,
-    FallOutlined,
-    PlusOutlined,
+    ShoppingCartOutlined,
+    UngroupOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
 import { Card, DatePicker, Space, Statistic, Table, Typography } from 'antd';
-import { useEffect, useState } from 'react';
-import { getCustomers, getInventory, getOrders, getRevenue } from '../API/index';
+import React, { useEffect, useState } from 'react';
 
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import useFetch from '@hooks/useFetch';
-import apiConfig from '@constants/apiConfig';
-import { formatDateString, formatMoney } from '@utils';
 import DateRangePickerField from '@components/common/form/DateRangePickerField';
 import { DATE_FORMAT_VALUE } from '@constants';
+import apiConfig from '@constants/apiConfig';
+import useFetch from '@hooks/useFetch';
+import { formatDateString, formatMoney } from '@utils';
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -74,8 +69,6 @@ function Dashboard() {
         // setCustomers(dataUser?.data?.totalElements);
     }, []);
     const onChange = (date, dateString) => {
-        console.log(1);
-        console.log(date[0].$d);
         // const startDate = formatDateString(date[0]?.$d, DATE_FORMAT_VALUE) + ' 00:00:00';
         if (date) {
             setStartDate(formatDateString(date[0]?.$d, DATE_FORMAT_VALUE) + ' 00:00:00');
@@ -221,6 +214,7 @@ function Dashboard() {
                 <RecentOrders />
                 <DashboardChart />
             </Space>
+            <RevenueOfEachProduct/>
         </Space>
     );
 }
@@ -268,7 +262,6 @@ function RecentOrders() {
                 const num = response.data.totalElements;
                 setDataSource(response.data.content.slice(-3));
                 setLoading(false);
-                console.log(response.data.content.slice(-3));
             },
         });
         // getOrders().then((res) => {
@@ -278,7 +271,7 @@ function RecentOrders() {
     }, []);
 
     return (
-        <>
+        <Card style={{ minWidth: 500 }}>
             <Typography.Title level={4}>Đơn hàng gần đây</Typography.Title>
             <Table
                 columns={[
@@ -316,7 +309,7 @@ function RecentOrders() {
                 pagination={false}
                 style={{ width: 400 }}
             ></Table>
-        </>
+        </Card>
     );
 }
 
@@ -335,25 +328,28 @@ function DashboardChart() {
         executeRevenue({
             params: { year: year },
             onCompleted: (response) => {
-                const labels = response.data.map((cart) => {
-                    return `Tháng ${cart.month}`;
-                });
-                const data = response.data.map((cart) => {
-                    return cart.revenue;
-                });
+                if (response.data) {
+                    const labels = response.data.map((cart) => {
+                        return `Tháng ${cart.month}`;
+                    });
+                    const data = response.data.map((cart) => {
+                        return cart.revenue;
+                    });
 
-                const dataSource = {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Thống kê doanh thu từng tháng',
-                            data: data,
-                            backgroundColor: 'rgba(255, 0, 0, 1)',
-                        },
-                    ],
-                };
+                    const dataSource = {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Thống kê doanh thu từng tháng',
+                                data: data,
+                                backgroundColor: 'rgba(255, 0, 0, 1)',
+                            },
+                        ],
+                    };
 
-                setReveneuData(dataSource);
+                    setReveneuData(dataSource);
+                }
+                else setReveneuData([]);
             },
         });
     }, [year]);
@@ -372,11 +368,72 @@ function DashboardChart() {
     };
     const onChange = (date, dateString) => {
         setYear(date.$y);
+        console.log(date.$y);
     };
     return (
-        <Card style={{ width: 550, height: 350, marginTop: 15 }}>
+        <Card style={{ minWidth: 500, height: 350, marginTop: 15 }}>
             <DatePicker onChange={onChange} picker="year" />
-            <Bar options={options} data={reveneuData} style={{ minWidth: 500 }} />
+            <Bar options={options} data={reveneuData} />
+        </Card>
+    );
+}
+
+function RevenueOfEachProduct() {
+    const [data, setData] = useState([]);
+
+    const { data: dataRevenue, execute: executeRevenueProduct } = useFetch({
+        ...apiConfig.revenue.getRevenueOfEachProduct,
+    });
+
+    useEffect(() => {
+        executeRevenueProduct({
+            onCompleted: (res) => {
+                setData(res.data.content);
+            },
+            onError: () => {},
+        });
+    }, []);
+
+    const itemHeader = [
+        {
+            title: 'Tên sản phẩm',
+            dataIndex: 'productName',
+            align: 'center',
+        },
+        {
+            title: 'Số lượng đã bán',
+            dataIndex: 'amount',
+            align: 'center',
+        },
+        {
+            title: 'Doanh thu',
+            dataIndex: 'totalRevenue',
+            align: 'center',
+            render: (value) => {
+                return (
+                    <span>
+                        {formatMoney(value, {
+                            groupSeparator: ',',
+                            decimalSeparator: '.',
+                            currentcy: 'đ',
+                            currentcyPosition: 'BACK',
+                            currentDecimal: '0',
+                        })}
+                    </span>
+                );
+            },
+        },
+    ];
+
+    return (
+        <Card style={{ minWidth: 500, minHeight: 350, marginTop: 15 }}>
+            <Typography.Title style={{ fontSize:22, marginBottom:20 }}>Thống kê doanh thu từng sản phẩm</Typography.Title>
+            <Table
+                pagination={true}
+                columns={itemHeader}
+                dataSource={data}
+                bordered
+            ></Table>
         </Card>
     );
 }

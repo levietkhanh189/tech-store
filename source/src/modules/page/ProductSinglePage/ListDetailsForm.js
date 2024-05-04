@@ -1,20 +1,13 @@
-import AutoCompleteField from '@components/common/form/AutoCompleteField';
-import { BaseForm } from '@components/common/form/BaseForm';
-import CropImageField from '@components/common/form/CropImageField';
-import NumericField from '@components/common/form/NumericField';
-import SelectField from '@components/common/form/SelectField';
-import TextField from '@components/common/form/TextField';
 import apiConfig from '@constants/apiConfig';
 import { statusOptions } from '@constants/masterData';
 import useAuth from '@hooks/useAuth';
 import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
-import { showErrorMessage } from '@services/notifyService';
-import { IconPlus } from '@tabler/icons-react';
-import { IconMinus } from '@tabler/icons-react';
+import routes from '@routes';
+import { showErrorMessage, showSucsessMessage, showWarningMessage } from '@services/notifyService';
 import { formatMoney } from '@utils';
-import { Button, Card, Col, Form, InputNumber, Modal, Row, Table } from 'antd';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Button, Form, InputNumber, Modal, Table } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { FormattedMessage, defineMessage } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,7 +17,7 @@ const message = defineMessage({
     login: 'Đăng nhập',
 });
 
-const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, nameProduct }) => {
+const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, nameProduct, check, quantityBuyNow }) => {
     const { profile } = useAuth();
     const [cartItem, setCartItem] = useState([]);
     const [checkList, setCheckArray] = useState(false);
@@ -33,12 +26,10 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
     const statusValues = translate.formatKeys(statusOptions, ['label']);
     const navigate = useNavigate();
     const [imageUrl, setImageUrl] = useState(null);
-    const { execute: executeUpFile } = useFetch(apiConfig.file.upload);
-    const { execute, loading } = useFetch({
+    const { execute: executeAddCart, loading } = useFetch({
         ...apiConfig.cart.add,
     });
     const [tableData, setTableData] = useState([]);
-    console.log(itemCart);
 
     // Kiểm tra xem itemCart có tồn tại không trước khi sử dụng map
     const [newArray, setnewArray] = useState([]);
@@ -72,7 +63,11 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
             // Nếu sản phẩm đã tồn tại trong giỏ hàng, tăng số lượng lên
             const updatedCart = cart.map((item) =>
                 item.id === product.id
-                    ? { ...item, quantity: item?.quantity + product.quantity, totalPriceSell: item?.totalPriceSell + product.totalPriceSell }
+                    ? {
+                        ...item,
+                        quantity: item?.quantity + product.quantity,
+                        totalPriceSell: item?.totalPriceSell + product.totalPriceSell,
+                    }
                     : item,
             );
             setCart(updatedCart);
@@ -88,8 +83,16 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
     };
 
     const updateArray = () => {
-        setnewArray(itemCart ? itemCart.map((item) => ({ ...item, quantity: 0, productVariantId: item?.id,
-            productName: nameProduct })) : []);
+        setnewArray(
+            itemCart
+                ? itemCart.map((item) => ({
+                    ...item,
+                    quantity: 0,
+                    productVariantId: item?.id,
+                    productName: nameProduct,
+                }))
+                : [],
+        );
     };
 
     // Gọi hàm updateArray khi cần thiết, chẳng hạn trong useEffect hoặc một sự kiện nào đó.
@@ -111,32 +114,32 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
     }, [newArray]);
 
     const handleFinish = () => {
-        // checkArray();
-        console.log(newArray);
         if (profile) {
             let data;
             data = { variantId: newArray[0].id, quantity: newArray[0].quantity };
-            execute({
+            executeAddCart({
                 data: { ...data },
                 onCompleted: (res) => {
                     // setCacheAccessToken(res.access_token);
                     // executeGetProfile();
+                    showSucsessMessage('Thêm vào giỏ hàng thành công');
                     window.location.reload();
                     onCancel();
-                    message.success('Thêm vào giỏ hàng thành công');
                 },
                 onError: () => {
-                    showErrorMessage(translate.formatMessage(message.loginFail));
+                    showErrorMessage('Thêm vào giỏ hàng thất bại');
+                    // window.location.reload();
                     form.resetFields();
                 },
             });
+            console.log(data);
         } else {
             newArray.forEach((product) => {
                 addToCart(product);
             });
             window.location.reload();
             onCancel();
-            message.success('Đặt hàng thành công');
+            message.success('Thêm vào giỏ hàng thành công');
         }
         onCancel();
         // removeFromCart(7000194750545920);
@@ -145,28 +148,21 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
     const onChange = (id, item) => {
         form.setFieldValue('projectRoleId', item);
     };
-    const uploadFile = (file, onSuccess, onError) => {
-        executeUpFile({
-            data: {
-                type: 'AVATAR',
-                file: file,
-            },
-            onCompleted: (response) => {
-                if (response.result === true) {
-                    onSuccess();
-                    setImageUrl(response.data.filePath);
-                    // setIsChangedFormValues(true);
-                }
-            },
-            onError: (error) => {
-                onError();
-            },
-        });
-    };
     const handleParser = (value) => {
-        // Xử lý giá trị trước khi hiển thị
         const parsedValue = value.toString().replace(/[^0-9]/g, ''); // Chỉ giữ lại số
         return parsedValue;
+    };
+
+    const handleBuyNow = () => {
+        if (newArray[0]?.quantity === 0) {
+            showWarningMessage('Bạn phải chọn sản phẩm');
+        } else {
+            const data = newArray.map(item => ({ ...item, productName:nameProduct }));
+            navigate(routes.OderPage.path, {
+                state: { data: { ...newArray[0] } },
+            });
+        }
+        // console.log(33333);
     };
 
     return (
@@ -174,10 +170,29 @@ const ListDetailsForm = ({ open, onCancel, data, form, itemCart, saleOff, namePr
             title={<FormattedMessage defaultMessage="Vui lòng chọn sản phẩm" />}
             open={open}
             onCancel={onCancel}
-            onOk={() => form.submit()}
+            // onOk={() => form.submit()}
             width={800}
+            footer={[
+                <Button key="cancel" onClick={onCancel}>
+                    Đóng
+                </Button>,
+                check === 1 && (
+                    <Button key="ok" type="primary" onClick={handleFinish}>
+                        Thêm vào giỏ hàng
+                    </Button>
+                ),
+                check === 2 && (
+                    <Button key="buyNow1" onClick={(e) => {
+                        e.stopPropagation();
+                        handleBuyNow();
+                        // handlerDetailsModal.open();
+                    }}>
+                        Thanh toán
+                    </Button>
+                ),
+            ]}
         >
-            <Form form={form} onFinish={handleFinish}>
+            <Form form={form}>
                 <Table
                     pagination={false}
                     onChange={(extra) => {

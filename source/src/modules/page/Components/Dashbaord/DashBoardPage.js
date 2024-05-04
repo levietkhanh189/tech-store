@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import Dashboard from '.';
 import PageWrapper from '@components/common/layout/PageWrapper';
+import React from 'react';
+import Dashboard from '.';
 
 const DashboardPage = () => {
     const breadRoutes = [{ breadcrumbName: 'Thống kê' }];
     return (
         <PageWrapper routes={breadRoutes}>
-            {/* <div className="container" style={{ marginLeft: 20 }}> */}
             <Dashboard/>
-            {/* </div> */}
         </PageWrapper>
     );
 };

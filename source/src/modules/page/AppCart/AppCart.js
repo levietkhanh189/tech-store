@@ -1,45 +1,33 @@
 /* eslint-disable indent */
-import React, { useEffect, useRef, useState } from 'react';
-import { generatePath, useNavigate, useParams } from 'react-router-dom';
-import Loading from '@components/common/loading';
+import { ShoppingCartOutlined } from '@ant-design/icons';
+import AutoCompleteField from '@components/common/form/AutoCompleteField';
+import SelectField from '@components/common/form/SelectField';
+import { apiFrontend, paymentSelect } from '@constants';
 import apiConfig from '@constants/apiConfig';
+import useAuth from '@hooks/useAuth';
 import useFetch from '@hooks/useFetch';
+import useTranslate from '@hooks/useTranslate';
+import routes from '@routes';
+import { showErrorMessage, showSucsessMessage } from '@services/notifyService';
+import { IconMinus, IconPlus, IconTrash } from '@tabler/icons-react';
 import { formatMoney } from '@utils';
 import {
     Badge,
     Button,
-    Card,
     Checkbox,
-    Divider,
     Drawer,
     Form,
     Input,
-    Popconfirm,
-    Result,
-    Space,
-    Steps,
     Table,
-    Tabs,
     Tag,
     Tooltip,
     Typography,
-    message,
-    theme,
 } from 'antd';
-import routes from '@routes';
+import React, { useEffect, useState } from 'react';
 import { defineMessage } from 'react-intl';
-import AutoCompleteField from '@components/common/form/AutoCompleteField';
-import SelectField from '@components/common/form/SelectField';
-import { paymentOptions, statusOptions } from '@constants/masterData';
-import useAuth from '@hooks/useAuth';
-import { showErrorMessage, showSucsessMessage } from '@services/notifyService';
-import useTranslate from '@hooks/useTranslate';
-const { Text } = Typography;
-import { ShoppingCartOutlined } from '@ant-design/icons';
-import { paymentSelect } from '@constants';
-import { IconPlus, IconTrash } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import './AppCart.scss';
-import { IconMinus } from '@tabler/icons-react';
+const { Text } = Typography;
 
 const decription = defineMessage({
     first: 'Kiểm tra số lượng sản phẩm',
@@ -107,23 +95,31 @@ const AppCart = () => {
 
     const removeFromCart = (productId) => {
         const updatedCart = cartItem.filter((item) => item.productVariantId !== productId);
-        setCartItem(updatedCart);
+        localStorage.setItem('cart', JSON.stringify(updatedCart));
+        // setCartItem(updatedCart);
+        setCheck(!check);
+        console.log(1);
         // window.location.reload();
     };
 
     useEffect(() => {
-        getCartExcute({
-            onCompleted: (response) => {
-                // setCacheAccessToken(res.access_token);
-                // executeGetProfile();
-                const data = response.data.cartDetailDtos;
-                setCartItem(response.data.cartDetailDtos);
-            },
-            onError: () => {
-                // showErrorMessage('Không lấy được giả hàng!');
-                // form.resetFields();
-            },
-        });
+        if (profile) {
+            getCartExcute({
+                onCompleted: (response) => {
+                    // setCacheAccessToken(res.access_token);
+                    // executeGetProfile();
+                    const data = response.data.cartDetailDtos;
+                    setCartItem(response.data.cartDetailDtos);
+                },
+                onError: () => {
+                    // showErrorMessage('Không lấy được giả hàng!');
+                    // form.resetFields();
+                },
+            });
+        } else {
+            const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+            setCartItem(storedCart);
+        }
     }, [check]);
 
     function onConfirmOrder(values) {
@@ -147,8 +143,8 @@ const AppCart = () => {
                     createTransaction({
                         data: {
                             orderId: respone.data.orderId,
-                            urlCancel: 'http://localhost:3000/my-order-fail',
-                            urlSuccess: 'http://localhost:3000/my-order-success',
+                            urlCancel: `${apiFrontend}my-order-fail`,
+                            urlSuccess: `${apiFrontend}my-order-succes`,
                         },
                         onCompleted: (res) => {
                             window.location.href = res.data;
@@ -226,13 +222,16 @@ const AppCart = () => {
             );
         };
 
-
         useEffect(() => {
             if (isInitialRender) {
                 setIsInitialRender(false);
                 return;
-              }
-            const updatedCart = { cartDetailId:record.cartDetailId, quantity: quantity, totalPriceSell: record.price * quantity };
+            }
+            const updatedCart = {
+                cartDetailId: record.cartDetailId,
+                quantity: quantity,
+                totalPriceSell: record.price * quantity,
+            };
             // updateCartItemById(record.cartDetailId, updatedCart);
             // console.log(updatedCart);
             setUpdatedCart(updatedCart);
@@ -241,10 +240,10 @@ const AppCart = () => {
                 data: { ...updatedCart },
                 onCompleted: (respone) => {
                     setCheck(!check);
-                 },
-                 onError: (error) => {
+                },
+                onError: (error) => {
                     console.log(error);
-                 },
+                },
             });
         }, [triggerEffect]);
 
@@ -341,12 +340,7 @@ const AppCart = () => {
                                 dataIndex: 'quantity',
                                 align: 'center',
                                 width: 200,
-                                render: (value, record) => (
-                                    <QuantityComponent
-                                        value={value}
-                                        record={record}
-                                    />
-                                ),
+                                render: (value, record) => <QuantityComponent value={value} record={record} />,
                             },
                             {
                                 title: 'Tổng',
@@ -538,16 +532,29 @@ const AppCart = () => {
                     ></Table>
                 )}
 
-                <Button
-                    type="primary"
-                    style={{ marginTop: 20 }}
-                    onClick={() => {
-                        profile ? navigate(routes.OderPage.path) : setCheckoutDrawerOpen(true);
-                        setCartDrawer(false);
-                    }}
-                >
-                    Đặt hàng
-                </Button>
+                {cartItem?.length > 0 ? (
+                    <Button
+                        type="primary"
+                        style={{ marginTop: 20 }}
+                        onClick={() => {
+                            profile ? navigate(routes.OderPage.path) : setCheckoutDrawerOpen(true);
+                            setCartDrawer(false);
+                        }}
+                    >
+                        Đặt hàng
+                    </Button>
+                ) : (
+                    <Button
+                        type="primary"
+                        style={{ marginTop: 20 }}
+                        onClick={() => {
+                            navigate(routes.ProductHomePage1.path);
+                            setCartDrawer(false);
+                        }}
+                    >
+                        Thêm giỏ hàng
+                    </Button>
+                )}
             </Drawer>
             <Drawer
                 open={checkoutDrawerOpen}
@@ -675,5 +682,3 @@ const AppCart = () => {
 };
 
 export default AppCart;
-
-

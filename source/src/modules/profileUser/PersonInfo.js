@@ -1,28 +1,24 @@
+import { UserOutlined } from '@ant-design/icons';
+import ListPage from '@components/common/layout/ListPage';
 import PageWrapper from '@components/common/layout/PageWrapper';
+import BaseTable from '@components/common/table/BaseTable';
+import { DEFAULT_TABLE_ITEM_SIZE } from '@constants';
 import apiConfig from '@constants/apiConfig';
-import useFetch from '@hooks/useFetch';
-import useFetchAction from '@hooks/useFetchAction';
-import useSaveBase from '@hooks/useSaveBase';
-import { accountActions } from '@store/actions';
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { defineMessages } from 'react-intl';
+import { accountStatusOptions } from '@constants/masterData';
+import useAuth from '@hooks/useAuth';
+import useListBase from '@hooks/useListBase';
 import useTranslate from '@hooks/useTranslate';
 import { commonMessage } from '@locales/intl';
-import { Avatar, Card, Divider, Space, Statistic, Tag, Tooltip, Typography } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
-import './PersonInfo.scss';
-import { IconEdit, IconEditCircle, IconStar } from '@tabler/icons-react';
-import useListBase from '@hooks/useListBase';
-import { DEFAULT_TABLE_ITEM_SIZE } from '@constants';
-import useAuth from '@hooks/useAuth';
-import ListPage from '@components/common/layout/ListPage';
-import BaseTable from '@components/common/table/BaseTable';
-import { userSateteOptions, accountStatusOptions } from '@constants/masterData';
 import routes from '@routes';
+import { IconEdit, IconStar } from '@tabler/icons-react';
+import { Avatar, Card, Divider, Space, Tag, Tooltip, Typography } from 'antd';
+import React, { useState } from 'react';
+import { defineMessages } from 'react-intl';
+import { useLocation, useNavigate } from 'react-router-dom';
+import './PersonInfo.scss';
 
 const message = defineMessages({
-    objectName: 'Profile',
+    objectName: 'Trang cá nhân',
 });
 
 const PersonInfo = () => {
@@ -114,6 +110,10 @@ const PersonInfo = () => {
         navigate(routes.PersonInfo.path + `/${profile.id}`);
     };
 
+    const handleReview = () => {
+        navigate(routes.EvaluatePage.path + `?userId=${profile.id}`);
+    };
+
     const breadRoutes = [{ breadcrumbName: translate.formatMessage(message.objectName) }];
 
     return (
@@ -139,7 +139,7 @@ const PersonInfo = () => {
                                 <IconStar
                                     size={40}
                                     color="#282a36"
-                                    onClick={handleEdit}
+                                    onClick={handleReview}
                                     style={{ marginLeft: 20, fontSize: 40, color: '#282a36', cursor: 'pointer' }}
                                 />
                             </Tooltip>

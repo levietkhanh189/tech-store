@@ -1,6 +1,7 @@
 import { commonMessage } from '@locales/intl';
 
 export const apiUrl = process.env.REACT_APP_API;
+export const apiFrontend = process.env.REACT_APP_FRONTEND;
 export const enableExposure = process.env.REACT_APP_ENABLE_EXPOSURE === 'true';
 
 export const fixedPath = {
@@ -115,6 +116,7 @@ export const PAYPAL_METHOD = 1;
 export const COD_METHOD = 0;
 
 export const LOCKED_USER = -1;
+export const NO_ACTIVE_USER = 0;
 export const ACTIVE_USER = 1;
 
 export const LOCKED_ACCOUNT = -1;

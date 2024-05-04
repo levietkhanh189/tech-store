@@ -1,23 +1,19 @@
-import AutoCompleteField from '@components/common/form/AutoCompleteField';
 import { BaseForm } from '@components/common/form/BaseForm';
 import DatePickerField from '@components/common/form/DatePickerField';
+import InputTextField from '@components/common/form/InputTextField';
 import SelectField from '@components/common/form/SelectField';
 import TextField from '@components/common/form/TextField';
-import { AppConstants, DATE_FORMAT_DISPLAY, DATE_FORMAT_VALUE, DEFAULT_FORMAT, paymentSelect } from '@constants';
+import { DATE_FORMAT_DISPLAY, DATE_FORMAT_VALUE, DEFAULT_FORMAT } from '@constants';
 import apiConfig from '@constants/apiConfig';
+import { orderStateValue, paidOptions, paymentOptions } from '@constants/masterData';
 import useBasicForm from '@hooks/useBasicForm';
 import useFetch from '@hooks/useFetch';
+import useTranslate from '@hooks/useTranslate';
 import { formatDateString } from '@utils';
-import { Card, Col, Form, Row, notification } from 'antd';
+import { Card, Col, Row } from 'antd';
 import dayjs from 'dayjs';
-import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { formSize, orderStateOption, orderStateValue, paidOptions, paymentOptions, statusOptions } from '@constants/masterData';
-import useTranslate from '@hooks/useTranslate';
-import NumericField from '@components/common/form/NumericField';
-import CropImageField from '@components/common/form/CropImageField';
-import InputTextField from '@components/common/form/InputTextField';
 
 const OrderAdminForm = (props) => {
     const { formId, actions, onSubmit, dataDetail, setIsChangedFormValues, isEditing } = props;
@@ -25,10 +21,10 @@ const OrderAdminForm = (props) => {
     const [isDisableStartDate, setIsDisableStartDate] = useState(false);
     // const lectureStateOptions = translate.formatKeys(lectureState, ['label']);
     // const [lectureStateFilter, setLectureStateFilter] = useState([lectureStateOptions[0]]);
-    const statusValues = translate.formatKeys(statusOptions, ['label']);
     const paymentValues = translate.formatKeys(paymentOptions, ['label']);
     const orderStateValues = translate.formatKeys(orderStateValue, ['label']);
     const isPaidValues = translate.formatKeys(paidOptions, ['label']);
+    const [orderStateFilter, setOrderStateFilter] = useState([orderStateValues[0]]);
 
     const [bannerUrl, setBannerUrl] = useState(null);
     const { execute: executeUpFile } = useFetch(apiConfig.file.upload);
@@ -52,14 +48,35 @@ const OrderAdminForm = (props) => {
         return Promise.resolve();
     };
     const validateDueDate = (_, value) => {
-        const { dateRegister } = form.getFieldValue();
-        if (dateRegister && value && value <= dateRegister) {
-            return Promise.reject('Ngày kết thúc phải lớn hơn ngày bắt đầu');
+        const { createdDate, state } = form.getFieldValue();
+        if (createdDate && value && value <= createdDate && state !== 3) {
+            return Promise.reject('Ngày giao hàng phải lớn hơn ngày đặt!');
         }
         return Promise.resolve();
     };
 
     useEffect(() => {
+        orderStateValues.map((state, index) => {
+            // if (!dataDetail?.isPaid && dataDetail?.paymentMethod === 1) {
+            //     const length = orderStateValues.length;
+            //     let arrayStateFilter = [];
+            //     setOrderStateFilter(arrayStateFilter);
+            // } else {
+            if (dataDetail?.state == state.value) {
+                const length = orderStateValues.length;
+                let arrayStateFilter = [];
+                if (index < length - 3) {
+                    arrayStateFilter = [state, orderStateValues[index + 1], orderStateValues[length - 1]];
+                } else if (index === length - 3) {
+                    arrayStateFilter = [state, orderStateValues[2], orderStateValues[length - 1]];
+                } else {
+                    arrayStateFilter = [state];
+                }
+
+                setOrderStateFilter(arrayStateFilter);
+            }
+            // }
+        });
         if (dataDetail.state !== undefined && dataDetail.state !== 1) {
             setIsDisableStartDate(true);
         } else {
@@ -72,11 +89,14 @@ const OrderAdminForm = (props) => {
             message: 'Vui lòng chọn ngày bắt đầu',
         },
     ];
-    // console.log(dataDetail);
     useEffect(() => {
         dataDetail.createdDate = dataDetail?.createdDate && dayjs(dataDetail?.createdDate, DATE_FORMAT_VALUE);
-        dataDetail.expectedDeliveryDate = dataDetail?.expectedDeliveryDate && dayjs(dataDetail?.expectedDeliveryDate, DATE_FORMAT_VALUE);
-        if (dataDetail ) form.setFieldsValue({ ...dataDetail  });
+        dataDetail.expectedDeliveryDate =
+            dataDetail?.expectedDeliveryDate && dayjs(dataDetail?.expectedDeliveryDate, DATE_FORMAT_VALUE);
+        if (!dataDetail?.expectedDeliveryDate) {
+            dataDetail.expectedDeliveryDate = dataDetail.createdDate;
+        }
+        if (dataDetail) form.setFieldsValue({ ...dataDetail });
     }, [dataDetail]);
 
     const getRules = () => {
@@ -90,6 +110,7 @@ const OrderAdminForm = (props) => {
 
         return rules;
     };
+
     return (
         <BaseForm formId={formId} onFinish={handleSubmit} form={form} onValuesChange={onValuesChange}>
             <Card className="card-form" bordered={false}>
@@ -110,12 +131,6 @@ const OrderAdminForm = (props) => {
                         />
                     </Col>
                 </Row>
-
-                <Row gutter={12}>
-                    <Col span={12}></Col>
-                    <Col span={12}></Col>
-                </Row>
-
                 <Row gutter={12}>
                     <Col span={12}>
                         <InputTextField
@@ -138,10 +153,10 @@ const OrderAdminForm = (props) => {
                 <Row gutter={12}>
                     <Col span={12}>
                         <DatePickerField
-                            label="Ngày tạo"
+                            label="Ngày đặt"
                             showTime={false}
                             name="createdDate"
-                            placeholder="Ngày tạo"
+                            placeholder="Ngày đặt"
                             format={DATE_FORMAT_DISPLAY}
                             style={{ width: '100%', height: 30 }}
                             size="small"
@@ -150,10 +165,20 @@ const OrderAdminForm = (props) => {
                     </Col>
                     <Col span={12}>
                         <DatePickerField
+                            disabled={dataDetail?.state === 4 || dataDetail?.state === 3}
                             label="Ngày dự kiến giao hàng"
                             showTime={false}
                             name="expectedDeliveryDate"
                             format={DATE_FORMAT_DISPLAY}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: 'Vui lòng chọn ngày giao hàng!',
+                                },
+                                {
+                                    validator: validateDueDate,
+                                },
+                            ]}
                             style={{ width: '100%', height: 30 }}
                             size="small"
                         />
@@ -162,11 +187,14 @@ const OrderAdminForm = (props) => {
                 <Row gutter={12}>
                     <Col span={12}>
                         <SelectField
-                            // disabled={isEditing}
+                            disabled={
+                                dataDetail?.state === 4 || (dataDetail?.paymentMethod === 1 && !dataDetail?.isPaid)
+                            }
+                            defaultValue={orderStateFilter[0]}
                             name="state"
                             label={<FormattedMessage defaultMessage="Trạng thái đơn hàng" />}
                             allowClear={false}
-                            options={orderStateValues}
+                            options={orderStateFilter}
                         />
                     </Col>
                     <Col span={12}>

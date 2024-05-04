@@ -1,15 +1,10 @@
-import AutoCompleteField from '@components/common/form/AutoCompleteField';
 import { BaseForm } from '@components/common/form/BaseForm';
-import CropImageField from '@components/common/form/CropImageField';
-import NumericField from '@components/common/form/NumericField';
-import SelectField from '@components/common/form/SelectField';
-import TextField from '@components/common/form/TextField';
 import apiConfig from '@constants/apiConfig';
 import { statusOptions } from '@constants/masterData';
 import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
 import { showErrorMessage } from '@services/notifyService';
-import { Alert, Button, Card, Col, Form, Input, Modal, Row } from 'antd';
+import { Alert, Button, Card, Col, Form, Input, Modal, Row, Statistic } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { FormattedMessage, defineMessage } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +30,7 @@ const ListDetailsForm = ({ open, onCancel, data, form, idHash, email }) => {
     useEffect(() => {
         if (data) form.setFieldsValue({ ...data });
     }, [data]);
+
     const handleFinish = (values) => {
         let data;
         data = { otp: values.otp, idHash: idHash };
@@ -56,6 +52,9 @@ const ListDetailsForm = ({ open, onCancel, data, form, idHash, email }) => {
         });
     };
 
+    const [secondsLeft, setSecondsLeft] = useState();
+    const [isCounting, setIsCounting] = useState(false);
+
     const handleGetOtp = () => {
         // Xử lý sự kiện khi người dùng click vào "Quên mật khẩu?"
         console.log('Người dùng đã click vào "Quên mật khẩu?"');
@@ -74,6 +73,24 @@ const ListDetailsForm = ({ open, onCancel, data, form, idHash, email }) => {
             },
         });
     };
+
+    useEffect(() => {
+        let timer;
+        // if (isCounting) {
+        timer = setInterval(() => {
+            setSecondsLeft((prevSeconds) => (prevSeconds > 0 ? prevSeconds - 1 : 0));
+        }, 1000);
+        // }
+
+        return () => {
+            clearInterval(timer);
+        };
+        // console.log(isCounting);
+    }, [isCounting]);
+
+    const formattedTime = `${Math.floor(secondsLeft / 60)
+        .toString()
+        .padStart(2, '0')}:${(secondsLeft % 60).toString().padStart(2, '0')}`;
 
     return (
         <Modal
@@ -101,7 +118,25 @@ const ListDetailsForm = ({ open, onCancel, data, form, idHash, email }) => {
                                 </Form.Item>
                             </Col>
                             <Col span={12}>
-                                <Button onClick={handleGetOtp}>Lấy mã</Button>
+                                {secondsLeft > 1 ? (
+                                    <Button>
+                                        <Statistic
+                                            value={formattedTime}
+                                            valueStyle={{ fontSize: 15, fontWeight: 500 }}
+                                        />
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={(e) => {
+                                            setSecondsLeft(40);
+                                            e.stopPropagation();
+                                            handleGetOtp();
+                                        }}
+                                    >
+                                        {/* {secondsLeft > 0 ? 'Lấy mã' : 'Gửi lại mã'} */}
+                                        Lấy mã
+                                    </Button>
+                                )}
                             </Col>
                         </Row>
                     </Form.Item>

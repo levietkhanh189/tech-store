@@ -1,19 +1,19 @@
-import TextField from '@components/common/form/TextField';
-import { Card, Col, Form, Row } from 'antd';
-import React, { useEffect, useState } from 'react';
-import useBasicForm from '@hooks/useBasicForm';
 import CropImageField from '@components/common/form/CropImageField';
-import useFetch from '@hooks/useFetch';
+import DatePickerField from '@components/common/form/DatePickerField';
+import SelectField from '@components/common/form/SelectField';
+import TextField from '@components/common/form/TextField';
+import { DATE_FORMAT_DISPLAY, DATE_FORMAT_VALUE, genderValues } from '@constants';
 import apiConfig from '@constants/apiConfig';
-import { AppConstants, DATE_FORMAT_DISPLAY, DATE_FORMAT_VALUE, genderValues } from '@constants';
-import { FormattedMessage, defineMessages } from 'react-intl';
+import useAuth from '@hooks/useAuth';
+import useBasicForm from '@hooks/useBasicForm';
+import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
 import { commonMessage } from '@locales/intl';
-import SelectField from '@components/common/form/SelectField';
-import useAuth from '@hooks/useAuth';
-import DatePickerField from '@components/common/form/DatePickerField';
 import { formatDateString } from '@utils';
+import { Card, Col, Form, Row } from 'antd';
 import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import { FormattedMessage, defineMessages } from 'react-intl';
 
 const message = defineMessages({
     objectName: 'group permission',
@@ -59,7 +59,7 @@ const ProfileForm = (props) => {
             phone: dataDetail?.account?.phone,
             gender: dataDetail?.gender,
         });
-        setImageUrl(dataDetail.avatar);
+        setImageUrl(dataDetail?.account?.avatar);
     }, [dataDetail]);
 
     const handleFinish = (values) => {
@@ -70,7 +70,7 @@ const ProfileForm = (props) => {
             oldPassword: values.oldPassword,
             password: values.password,
             birthday: formatDateString(values?.birthday, DATE_FORMAT_VALUE) + ' 00:00:00',
-            avatar: imageUrl,
+            avatarPath: imageUrl,
         });
     };
 

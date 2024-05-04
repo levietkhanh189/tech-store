@@ -1,47 +1,27 @@
 /* eslint-disable indent */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { generatePath, useLocation, useNavigate } from 'react-router-dom';
 import './OrderPage.scss';
-import { generatePath, useNavigate, useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 // import { fetchAsyncProductSingle, getProductSingle, getSingleProductStatus } from '../../store/productSlice';
-import { formatPrice } from '../../../utils/helpers';
 // import { addToCart, getCartMessageStatus, setCartMessageOff, setCartMessageOn } from '../../store/cartSlice';
 // import CartMessage from '../../components/CartMessage/CartMessage';
-import Loading from '@components/common/loading';
-import apiConfig from '@constants/apiConfig';
-import useFetch from '@hooks/useFetch';
-import { formatMoney } from '@utils';
-import { IconEdit, IconEditCircle, IconEditCircleOff, IconMinus, IconPlus, IconPlusMinus } from '@tabler/icons-react';
-import {
-    Button,
-    Checkbox,
-    Divider,
-    Form,
-    Input,
-    Result,
-    Space,
-    Steps,
-    Table,
-    Tag,
-    Typography,
-    message,
-    theme,
-} from 'antd';
-import axios from 'axios';
-import ListDetailsForm from './ListDetailsForm';
-import useDisclosure from '@hooks/useDisclosure';
-import PageWrapper from '@components/common/layout/PageWrapper';
-import routes from '@routes';
-import { LoadingOutlined, SmileOutlined, SolutionOutlined, UserOutlined } from '@ant-design/icons';
-import { IconLoader } from '@tabler/icons-react';
-import { defineMessage } from 'react-intl';
 import AutoCompleteField from '@components/common/form/AutoCompleteField';
 import SelectField from '@components/common/form/SelectField';
-import { paymentOptions } from '@constants/masterData';
+import PageWrapper from '@components/common/layout/PageWrapper';
+import { apiFrontend, paymentSelect } from '@constants';
+import apiConfig from '@constants/apiConfig';
 import useAuth from '@hooks/useAuth';
-import { showErrorMessage, showSucsessMessage } from '@services/notifyService';
+import useDisclosure from '@hooks/useDisclosure';
+import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
-import { paymentSelect } from '@constants';
+import routes from '@routes';
+import { showErrorMessage, showSucsessMessage } from '@services/notifyService';
+import { IconEdit, IconPlus } from '@tabler/icons-react';
+import { formatMoney } from '@utils';
+import { Button, Divider, Form, Input, Result, Space, Steps, Table, Tag, Typography, theme } from 'antd';
+import { defineMessage } from 'react-intl';
+import ListDetailsForm from './ListDetailsForm';
 const { Text } = Typography;
 let index = 0;
 
@@ -61,6 +41,18 @@ const OrderPage = () => {
     const translate = useTranslate();
     const [item1, setItem1] = useState(null);
     const [orderId, setOrderId] = useState(0);
+    const [arrayBuyNow, setArrayBuyNow] = useState([]);
+
+    const location = useLocation();
+    const receivedData = location.state?.data;
+    // console.log(receivedData);
+
+    useEffect(() => {
+        if (receivedData) {
+            setArrayBuyNow(prevArray => [...prevArray, receivedData]);
+        }
+    }, [receivedData]);
+
     const renderTitle = (title, item) => (
         <span>
             {title}
@@ -130,15 +122,27 @@ const OrderPage = () => {
     });
 
     function onConfirmOrder(values) {
-        let array2 = new Array(cartItem.length).fill(null);
+        // let array2 = new Array(cartItem.length).fill(null);
+        let array2 = [];
+        if (receivedData) {
+            array2 = [...array2, receivedData];
+            array2 = array2.map((item) => ({
+                color: item.color,
+                price: item.price,
+                productName: item.productName,
+                productVariantId: item.productVariantId,
+                quantity: item.quantity,
+            }));
+        } else {
+            array2 = cartItem.map((item) => ({
+                color: item.color,
+                price: item.price,
+                productName: item.productName,
+                productVariantId: item.productVariantId,
+                quantity: item.quantity,
+            }));
+        }
 
-        array2 = cartItem.map((item) => ({
-            color: item.color,
-            price: item.price,
-            productName: item.productName,
-            productVariantId: item.productVariantId,
-            quantity: item.quantity,
-        }));
         const updatedValues = {
             ...values,
             listOrderProduct: array2, // Thay yourListOrderProductArray bằng mảng thực tế của bạn
@@ -151,8 +155,8 @@ const OrderPage = () => {
                     createTransaction({
                         data: {
                             orderId: respone.data.orderId,
-                            urlCancel: 'http://localhost:3000/my-order-fail',
-                            urlSuccess: 'http://localhost:3000/my-order-success',
+                            urlCancel: `${apiFrontend}my-order-fail`,
+                            urlSuccess: `${apiFrontend}my-order-succes`,
                         },
                         onCompleted: (res) => {
                             window.location.href = res.data;
@@ -172,7 +176,7 @@ const OrderPage = () => {
                     setCurrent(2);
 
                     setTimeout(() => {
-                        window.location.reload();
+                       navigate(routes.HistoryOrder.path);
                     }, 2000);
                 }
             },
@@ -180,7 +184,6 @@ const OrderPage = () => {
                 showErrorMessage('Đặt hàng thất bại');
             },
         });
-        // message.success('Đặt hàng thành công');
     }
     const [loadings, setLoadings] = useState([]);
     const enterLoading = (index) => {
@@ -213,7 +216,7 @@ const OrderPage = () => {
                         },
                         {
                             title: 'Màu sắc',
-                            dataIndex: ['color'],
+                            dataIndex: 'color',
                             align: 'center',
                         },
                         {
@@ -258,7 +261,7 @@ const OrderPage = () => {
                             },
                         },
                     ]}
-                    dataSource={cartItem}
+                    dataSource={arrayBuyNow?.length > 0 ? arrayBuyNow : cartItem}
                     bordered
                     summary={(data) => {
                         const total = data.reduce((pre, current) => {
@@ -356,13 +359,13 @@ const OrderPage = () => {
                     <Form.Item label="Ghi chú" name="note">
                         <Input placeholder="Nhập ghi chú ..." />
                     </Form.Item>
-                    <Form.Item labelAlign="right" label="Mã giảm giá" name="voucherId">
+                    {/* <Form.Item labelAlign="right" label="Mã giảm giá" name="voucherId">
                         <Input placeholder="Nhập mã giảm giá ..." />
-                    </Form.Item>
+                    </Form.Item> */}
                     <AutoCompleteField
                         label="Địa chỉ"
                         name="addressId"
-                        apiConfig={apiConfig.address.getList}
+                        apiConfig={apiConfig.address.getMyAddress}
                         required
                         dropdownRender={(menu) => (
                             <>
@@ -462,17 +465,6 @@ const OrderPage = () => {
     };
 
     const [quantity, setQuantity] = useState(1);
-
-    // getting single product
-    // useEffect(() => {
-    //     dispatch(fetchAsyncProductSingle(id));
-
-    //     if (cartMessageStatus) {
-    //         setTimeout(() => {
-    //             dispatch(setCartMessageOff());
-    //         }, 2000);
-    //     }
-    // }, [cartMessageStatus]);
 
     return (
         <div className="con1 py-4 bg-whitesmoke" style={{ display: 'flex', justifyContent: 'start', marginLeft: 200 }}>

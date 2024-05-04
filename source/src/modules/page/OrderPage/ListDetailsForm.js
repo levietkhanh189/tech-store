@@ -1,8 +1,5 @@
 import AutoCompleteField from '@components/common/form/AutoCompleteField';
 import { BaseForm } from '@components/common/form/BaseForm';
-import CropImageField from '@components/common/form/CropImageField';
-import NumericField from '@components/common/form/NumericField';
-import SelectField from '@components/common/form/SelectField';
 import TextField from '@components/common/form/TextField';
 import apiConfig from '@constants/apiConfig';
 import { statusOptions } from '@constants/masterData';
@@ -11,11 +8,8 @@ import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
 import { commonMessage } from '@locales/intl';
 import { showErrorMessage } from '@services/notifyService';
-import { IconPlus } from '@tabler/icons-react';
-import { IconMinus } from '@tabler/icons-react';
-import { formatMoney } from '@utils';
-import { Button, Card, Col, Form, InputNumber, Modal, Row, Table } from 'antd';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Card, Col, Modal, Row } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { FormattedMessage, defineMessage } from 'react-intl';
 import { useNavigate } from 'react-router-dom';
 
@@ -156,7 +150,7 @@ const ListDetailsForm = ({ open, onCancel, data, form, isEditing }) => {
                         </Col>
                         <Col span={12}>
                             <AutoCompleteField
-                                label={translate.formatMessage(commonMessage.Province)}
+                                label="Tỉnh/Thành phố"
                                 name="provinceId"
                                 apiConfig={apiConfig.nation.autocomplete}
                                 mappingOptions={(item) => ({ value: item.id, label: item.name })}
@@ -167,7 +161,7 @@ const ListDetailsForm = ({ open, onCancel, data, form, isEditing }) => {
                         </Col>
                         <Col span={12}>
                             <AutoCompleteField
-                                label={translate.formatMessage(commonMessage.District)}
+                                label="Quận/Huyện"
                                 name="districtId"
                                 apiConfig={apiConfig.nation.autocomplete}
                                 mappingOptions={(item) => ({ value: item.id, label: item.name })}
@@ -179,7 +173,7 @@ const ListDetailsForm = ({ open, onCancel, data, form, isEditing }) => {
                         </Col>
                         <Col span={12}>
                             <AutoCompleteField
-                                label={translate.formatMessage(commonMessage.Village)}
+                                label="Phường/Xã"
                                 name="wardId"
                                 apiConfig={apiConfig.nation.autocomplete}
                                 mappingOptions={(item) => ({ value: item.id, label: item.name })}

@@ -1,20 +1,22 @@
-import { AppConstants, DATE_FORMAT_VALUE, DEFAULT_FORMAT, DEFAULT_TABLE_ITEM_SIZE } from '@constants';
-import useListBase from '@hooks/useListBase';
-import React from 'react';
-import { UserOutlined, DeleteOutlined } from '@ant-design/icons';
-import PageWrapper from '@components/common/layout/PageWrapper';
-import ListPage from '@components/common/layout/ListPage';
-import BaseTable from '@components/common/table/BaseTable';
-import { orderStateOption, paymentOptions, statusOptions } from '@constants/masterData';
-import useTranslate from '@hooks/useTranslate';
-import { FieldTypes } from '@constants/formConfig';
-import apiConfig from '@constants/apiConfig';
-import { defineMessages } from 'react-intl';
-import { Button, Tag } from 'antd';
-import { commonMessage } from '@locales/intl';
-import { convertUtcToLocalTime, formatMoney } from '@utils';
+import { StarFilled, UserOutlined } from '@ant-design/icons';
 import AvatarField from '@components/common/form/AvatarField';
+import { BaseTooltip } from '@components/common/form/BaseTooltip';
+import ListPage from '@components/common/layout/ListPage';
+import PageWrapper from '@components/common/layout/PageWrapper';
+import BaseTable from '@components/common/table/BaseTable';
+import { DEFAULT_TABLE_ITEM_SIZE } from '@constants';
+import apiConfig from '@constants/apiConfig';
+import { orderStateOption, paymentOptions, statusOptions } from '@constants/masterData';
+import useDisclosure from '@hooks/useDisclosure';
+import useFetch from '@hooks/useFetch';
+import useListBase from '@hooks/useListBase';
+import useTranslate from '@hooks/useTranslate';
+import ReviewListModal from '@modules/page/ReviewPage/ReviewListModal';
 import routes from '@routes';
+import { formatMoney } from '@utils';
+import { Button } from 'antd';
+import React, { useState } from 'react';
+import { defineMessages } from 'react-intl';
 
 const message = defineMessages({
     objectName: 'Chi tiết đơn hàng',
@@ -27,11 +29,16 @@ const message = defineMessages({
 const DetailOrder = () => {
     const translate = useTranslate();
     const queryParameters = new URLSearchParams(window.location.search);
+    const [orderDetailId, setOrderDetailId] = useState(null);
+    const [openReviewModal, handlersReviewModal] = useDisclosure(false);
+
+
 
     const orderId = queryParameters.get('orderId');
     const statusValues = translate.formatKeys(statusOptions, ['label']);
     const stateValues = translate.formatKeys(paymentOptions, ['label']);
     const orderStatetateValues = translate.formatKeys(orderStateOption, ['label']);
+
 
     const { data, mixinFuncs, queryFilter, loading, pagination, changePagination, serializeParams, serializeParam } =
         useListBase({
@@ -77,6 +84,29 @@ const DetailOrder = () => {
                 funcs.getList = () => {
                     const params = mixinFuncs.prepareGetListParams(queryFilter);
                     mixinFuncs.handleFetchList({ ...params, orderId: null });
+                };
+                funcs.additionalActionColumnButtons = () => {
+                    return {
+                        review: ({ buttonProps, ...dataRow }) => (
+                            <BaseTooltip title="Đánh giá sản phẩm">
+                                <Button
+                                    type="link"
+                                    // disabled={state !== 3}
+                                    style={{ padding: 0 }}
+                                    onClick={(e) => {
+                                        getListReview(dataRow?.productId);
+                                        getStarReview(dataRow?.productId);
+                                        setOrderDetailId(dataRow?.id);
+                                        e.stopPropagation();
+                                        console.log(dataRow);
+                                        handlersReviewModal.open();
+                                    }}
+                                >
+                                    <StarFilled style={{ fontSize:20, color:'yellow' }}/>
+                                </Button>
+                            </BaseTooltip>
+                        ),
+                    };
                 };
             },
         });
@@ -135,7 +165,7 @@ const DetailOrder = () => {
             },
         },
         // mixinFuncs.renderStatusColumn({ width: '120px' }),
-        // mixinFuncs.renderActionColumn({ edit: true, delete: false }, { width: '120px' }),
+        mixinFuncs.renderActionColumn({ review: true }, { width: '120px' }),
     ];
 
     const searchFields = [
@@ -149,8 +179,45 @@ const DetailOrder = () => {
         { breadcrumbName: translate.formatMessage(message.objectName) },
     ];
 
+    const { data: dataListReview, loading:dataListLoading, execute: listReview } = useFetch(
+        apiConfig.review.getByProduct,
+        { immediate: false,
+            mappingData: ({ data }) => data.content,
+        });
+
+    const getListReview = (id) => {
+        listReview({
+            pathParams: {
+                id : id,
+            },
+        });
+    };
+    const { data: starData,loading:starDataLoading, execute: starReview } = useFetch(
+        apiConfig.review.starListReview,
+        { immediate: false,
+            mappingData: ({ data }) => data.content,
+        });
+
+    const getStarReview = (id) => {
+        starReview({
+            pathParams: {
+                productId : id,
+            },
+        });
+    };
+
     return (
         <PageWrapper routes={breadRoutes}>
+            <ReviewListModal
+                open={openReviewModal}
+                onCancel={() => handlersReviewModal.close()}
+                data={dataListReview || {}}
+                // courseId = {courseId}
+                orderDetailId={orderDetailId}
+                star={starData}
+                // loading={dataListLoading || starDataLoading || loadingData}
+                width={800}
+            />
             <ListPage
                 searchForm={mixinFuncs.renderSearchForm({ fields: searchFields, initialValues: queryFilter })}
                 // actionBar={mixinFuncs.renderActionBar()}

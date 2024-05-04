@@ -1,17 +1,14 @@
-import { Card, Col, Form, Row } from 'antd';
-import React, { useEffect, useState } from 'react';
-import useBasicForm from '@hooks/useBasicForm';
+import AutoCompleteField from '@components/common/form/AutoCompleteField';
+import { BaseForm } from '@components/common/form/BaseForm';
 import TextField from '@components/common/form/TextField';
-import CropImageField from '@components/common/form/CropImageField';
-import { AppConstants } from '@constants';
-import useFetch from '@hooks/useFetch';
 import apiConfig from '@constants/apiConfig';
-import { defineMessages } from 'react-intl';
+import useBasicForm from '@hooks/useBasicForm';
+import useFetch from '@hooks/useFetch';
 import useTranslate from '@hooks/useTranslate';
 import { commonMessage } from '@locales/intl';
-import { BaseForm } from '@components/common/form/BaseForm';
-import SelectField from '@components/common/form/SelectField';
-import AutoCompleteField from '@components/common/form/AutoCompleteField';
+import { Card, Col, Row } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { defineMessages } from 'react-intl';
 
 const message = defineMessages({
     objectName: 'group permission',
@@ -114,7 +111,7 @@ const AddressForm = (props) => {
                     </Col>
                     <Col span={12}>
                         <AutoCompleteField
-                            label={translate.formatMessage(commonMessage.Province)}
+                            label="Tỉnh/Thành phố"
                             name="provinceId"
                             apiConfig={apiConfig.nation.autocomplete}
                             mappingOptions={(item) => ({ value: item.id, label: item.name })}
@@ -126,7 +123,7 @@ const AddressForm = (props) => {
                     </Col>
                     <Col span={12}>
                         <AutoCompleteField
-                            label={translate.formatMessage(commonMessage.District)}
+                            label="Quận/Huyện"
                             name="districtId"
                             apiConfig={apiConfig.nation.autocomplete}
                             mappingOptions={(item) => ({ value: item.id, label: item.name })}
@@ -138,7 +135,7 @@ const AddressForm = (props) => {
                     </Col>
                     <Col span={12}>
                         <AutoCompleteField
-                            label={translate.formatMessage(commonMessage.Village)}
+                            label="Phường/Xã"
                             name="wardId"
                             apiConfig={apiConfig.nation.autocomplete}
                             mappingOptions={(item) => ({ value: item.id, label: item.name })}

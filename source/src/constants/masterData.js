@@ -1,26 +1,27 @@
 import {
+    ACTIVE_ACCOUNT,
+    ACTIVE_USER,
+    COD_METHOD,
+    DISTRICT_KIND,
+    LOCKED_ACCOUNT,
+    LOCKED_USER,
+    NO_ACTIVE_USER,
+    PAYPAL_METHOD,
+    PROVINCE_KIND,
+    STATE_CANCELED,
+    STATE_CANCELED_ADMIN,
+    STATE_COMPLETED,
+    STATE_COMPLETED_ADMIN,
+    STATE_CONFIRMED,
+    STATE_CONFIRMED_ADMIN,
+    STATE_NOPAID,
+    STATE_PAIDED,
+    STATE_PENDING,
+    STATE_PENDING_ADMIN,
     STATUS_ACTIVE,
     STATUS_INACTIVE,
     STATUS_PENDING,
-    PROVINCE_KIND,
-    DISTRICT_KIND,
     VILLAGE_KIND,
-    PAYPAL_METHOD,
-    COD_METHOD,
-    STATE_PENDING,
-    STATE_CONFIRMED,
-    STATE_COMPLETED,
-    STATE_CANCELED,
-    STATE_PENDING_ADMIN,
-    STATE_CONFIRMED_ADMIN,
-    STATE_COMPLETED_ADMIN,
-    STATE_CANCELED_ADMIN,
-    STATE_NOPAID,
-    STATE_PAIDED,
-    ACTIVE_USER,
-    LOCKED_USER,
-    LOCKED_ACCOUNT,
-    ACTIVE_ACCOUNT,
 } from '@constants';
 import { defineMessages } from 'react-intl';
 import { nationKindMessage } from './intl';
@@ -39,6 +40,7 @@ const paymentMessage = defineMessages({
 const userStateMessage = defineMessages({
     LOCKED_USER: 'Khóa',
     ACTIVE_USER: 'Kích hoạt',
+    NO_ACTIVE_USER: 'Chưa kích hoạt',
 });
 
 const accountStatusMessage = defineMessages({
@@ -85,9 +87,9 @@ export const commonStatus = [
 ];
 
 export const orderStateOption = [
-    { value: STATE_PENDING, label: orderStateMessage.STATE_PENDING, color: '#d4d61d' },
-    { value: STATE_CONFIRMED, label: orderStateMessage.STATE_CONFIRMED, color: '#46c956' },
-    { value: STATE_COMPLETED, label: orderStateMessage.STATE_COMPLETED, color: '#9af099' },
+    { value: STATE_PENDING, label: orderStateMessage.STATE_PENDING, color: '#07c1be' },
+    { value: STATE_CONFIRMED, label: orderStateMessage.STATE_CONFIRMED, color: '#d9d208' },
+    { value: STATE_COMPLETED, label: orderStateMessage.STATE_COMPLETED, color: '#25f221' },
     { value: STATE_CANCELED, label: orderStateMessage.STATE_CANCELED, color: '#f52828' },
 ];
 
@@ -121,6 +123,7 @@ export const paymentOptions = [
 
 export const userSateteOptions = [
     { value: LOCKED_USER, label: userStateMessage.LOCKED_USER, color: 'red' },
+    { value: NO_ACTIVE_USER, label: userStateMessage.NO_ACTIVE_USER, color: 'yellow' },
     { value: ACTIVE_USER, label: userStateMessage.ACTIVE_USER, color: 'green' },
 ];
 
