@@ -156,7 +156,7 @@ const OrderPage = () => {
                         data: {
                             orderId: respone.data.orderId,
                             urlCancel: `${apiFrontend}my-order-fail`,
-                            urlSuccess: `${apiFrontend}my-order-succes`,
+                            urlSuccess: `${apiFrontend}my-order-success`,
                         },
                         onCompleted: (res) => {
                             window.location.href = res.data;
@@ -174,10 +174,10 @@ const OrderPage = () => {
                 } else {
                     showSucsessMessage('Đặt hàng thành công');
                     setCurrent(2);
-
                     setTimeout(() => {
                        navigate(routes.HistoryOrder.path);
-                    }, 2000);
+                        window.location.reload();
+                    }, 1500);
                 }
             },
             onError: (error) => {

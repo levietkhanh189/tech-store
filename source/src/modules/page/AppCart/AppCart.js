@@ -144,7 +144,7 @@ const AppCart = () => {
                         data: {
                             orderId: respone.data.orderId,
                             urlCancel: `${apiFrontend}my-order-fail`,
-                            urlSuccess: `${apiFrontend}my-order-succes`,
+                            urlSuccess: `${apiFrontend}my-order-success`,
                         },
                         onCompleted: (res) => {
                             window.location.href = res.data;
@@ -631,9 +631,9 @@ const AppCart = () => {
                     <Form.Item label="Ghi chú" name="note">
                         <Input placeholder="Nhập ghi chú ..." />
                     </Form.Item>
-                    <Form.Item labelAlign="right" label="Mã giảm giá" name="voucherId">
+                    {/* <Form.Item labelAlign="right" label="Mã giảm giá" name="voucherId">
                         <Input placeholder="Nhập mã giảm giá ..." />
-                    </Form.Item>
+                    </Form.Item> */}
                     <AutoCompleteField
                         label="Tỉnh"
                         name="province"
